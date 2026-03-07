@@ -130,7 +130,7 @@
                         <thead class="bg-slate-100 text-[9px] font-black uppercase text-slate-500 tracking-wider">
                             <tr>
                                 <th class="px-4 py-3 border-b">UFV</th>
-                                <th class="px-4 py-3 border-b text-center">Digifort/SIM Next</th>
+                                <th class="px-4 py-3 border-b text-center">Digifort</th>
                                 <th class="px-4 py-3 border-b text-center">AnyDesk</th>
                                 <th class="px-4 py-3 border-b text-center">Total Câm</th>
                                 <th class="px-4 py-3 border-b text-center">Câm. ON</th>
@@ -236,7 +236,7 @@
             store.count().onsuccess = (e) => {
                 if (e.target.result === 0) {
                     NOMES_USINAS.forEach(nome => {
-                        store.add({ id: nome.toLowerCase().replace(/\s/g, '_'), ufv: nome, digifort/sim next: "OK", anydesk: "OK", totalCam: 8, onCam: 8, fibra: "OK" });
+                        store.add({ id: nome.toLowerCase().replace(/\s/g, '_'), ufv: nome, digifort: "OK", anydesk: "OK", totalCam: 8, onCam: 8, fibra: "OK" });
                     });
                 }
                 setTimeout(() => { renderizarUFVs(); popularUsinasSelect(); }, 100);
@@ -411,6 +411,6 @@
 
     </script>
 </body>
-
 </html>
+
 
