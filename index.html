@@ -281,7 +281,7 @@
             if(!db) return;
             const q = document.getElementById('search').value.toLowerCase();
             db.transaction("ocorrencias").objectStore("ocorrencias").getAll().onsuccess = (e) => {
-                const lista = e.target.result.filter(o => o.usina.toLowerCase().includes(q) || o.status.toLowerCase().includes(q));
+                const lista = e.target.result.filter(o => o.usina.toLowerCase().includes(q) || o.status.toLowerCase().includes(q) || o.operador.toLowerCase().includes(q) || o.dataReg.toLowerCase().includes(q));
                 document.getElementById('tabelaDados').innerHTML = lista.reverse().map(o => `
                     <tr class="hover:bg-slate-50 transition border-b">
                         <td class="px-6 py-4">
@@ -463,4 +463,5 @@ function exportarExcel() {
     </script>
 </body>
 </html>
+
 
