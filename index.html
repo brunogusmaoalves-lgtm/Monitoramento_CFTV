@@ -335,7 +335,13 @@
                 const lista = e.target.result.sort((a,b) => a.ufv.localeCompare(b.ufv));
                 document.getElementById('tabelaUFVs').innerHTML = lista.map(u => `
                     <tr>
-                        <td class="px-4 py-3 font-black text-emerald-700 uppercase">${u.ufv}</td>
+                        <td class="px-4 py-3 text-center">
+    <select onchange="updateUFV('${u.id}', 'pronta_resposta', this.value)" 
+            class="bg-transparent border-none font-normal text-xs text-center ${u.pronta_resposta === 'ATIVO' ? 'text-emerald-600' : 'text-slate-400'} outline-none cursor-pointer">
+        <option value="ATIVO" ${u.pronta_resposta === 'ATIVO' ? 'selected' : ''}>ATIVO</option>
+        <option value="INATIVO" ${u.pronta_resposta === 'INATIVO' ? 'selected' : ''}>INATIVO</option>
+    </select>
+</td>
                         <td class="px-4 py-3 text-center">
                             <select onchange="updateUFV('${u.id}', 'digifort', this.value)" class="bg-transparent border-none font-bold text-center ${u.digifort!=='OK'?'text-red-500':'text-emerald-600'} outline-none">
                                 <option value="OK" ${u.digifort==='OK'?'selected':''}>OK</option>
@@ -557,5 +563,6 @@ function exportarStatusUFVExcel() {
     </script>
 </body>
 </html>
+
 
 
