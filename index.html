@@ -121,12 +121,31 @@
         </main>
 
         <main id="contentStatus" class="hidden p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        
+        <div class="p-6 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 no-print">
+            <div>
+                <h3 class="font-black text-slate-800 uppercase text-sm tracking-tighter">Status de Infraestrutura</h3>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Painel Operacional</p>
+            </div>
+            
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button onclick="window.print()" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+                <button onclick="exportarStatusUFVExcel()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="p-6 border-b flex justify-between items-center bg-slate-50/50">
-                    <div>
-                        <h3 class="font-black text-slate-800 uppercase text-sm tracking-tighter">Status de Infraestrutura das UFVs</h3>
-                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Painel de Controle Operacional</p>
-                    </div>
+                
+                 
+
+                    
                 </div>
                 <div class="overflow-x-auto max-h-[75vh]">
                     <table class="w-full text-left border-collapse sticky-header">
@@ -138,6 +157,8 @@
                                 <th class="px-4 py-3 border-b text-center">Total Câm</th>
                                 <th class="px-4 py-3 border-b text-center">Câm. ON</th>
                                 <th class="px-4 py-3 border-b">Fibra Sensitiva</th>
+				<th class="px-4 py-3 border-b">Segurança Patrimonial</th>
+				<th class="px-4 py-3 border-b">Pronta Resposta</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaUFVs" class="text-[11px] divide-y divide-slate-100"></tbody>
@@ -239,7 +260,7 @@
             store.count().onsuccess = (e) => {
                 if (e.target.result === 0) {
                     NOMES_USINAS.forEach(nome => {
-                        store.add({ id: nome.toLowerCase().replace(/\s/g, '_'), ufv: nome, digifort: "OK", anydesk: "OK", totalCam: 8, onCam: 8, fibra: "OK" });
+                        store.add({ id: nome.toLowerCase().replace(/\s/g, '_'), ufv: nome, digifort: "OK", anydesk: "OK", totalCam: 8, onCam: 8, fibra: "OK"});
                     });
                 }
                 setTimeout(() => { renderizarUFVs(); popularUsinasSelect(); }, 100);
@@ -336,10 +357,25 @@
                                 <option value="N/A" ${u.fibra==='N/A'?'selected':''}>NÃO TEM</option>
                             </select>
                         </td>
+                          <td class="px-4 py-3 text-center">
+    				<select onchange="updateUFV('${u.id}', 'seguranca', this.value)" 
+            			class="bg-transparent border-none ${u.seguranca === 'SEM NECESSIDADE' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
+        			<option value="MOBILIZADA" ${u.seguranca === 'MOBILIZADA' ? 'selected' : ''}>MOBILIZADA</option>
+       				 <option value="SEM NECESSIDADE" ${u.seguranca === 'SEM NECESSIDADE' ? 'selected' : ''}>SEM NECESSIDADE</option>
+  				  </select>
+			</td>
+			<td class="px-4 py-3 text-center">
+   			 <select onchange="updateUFV('${u.id}', 'pronta_resposta', this.value)" 
+            		class="bg-transparent border-none ${u.pronta_resposta === 'ATIVO' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
+        		<option value="ATIVO" ${u.pronta_resposta === 'ATIVO' ? 'selected' : ''}>ATIVO</option>
+        		<option value="INATIVO" ${u.pronta_resposta === 'INATIVO' ? 'selected' : ''}>INATIVO</option>
+   			 </select>
+			</td>
                     </tr>
                 `).join('');
             };
         }
+
 
         function updateUFV(id, campo, valor) {
             const trans = db.transaction("ufv_status", "readwrite");
@@ -460,9 +496,66 @@ function exportarExcel() {
         alert("Erro ao acessar o banco de dados para exportação.");
     };
 }
+function exportarStatusUFVExcel() {
+    // Acede à tabela de status das usinas
+    const transaction = db.transaction("ufv_status", "readonly");
+    const store = transaction.objectStore("ufv_status");
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+        const dados = request.result;
+        
+        if (dados.length === 0) {
+            alert("Não existem dados de status para exportar.");
+            return;
+        }
+
+        // 1. Cabeçalhos das Colunas (Ponto e vírgula para abrir direto em colunas no Excel BR)
+        let csv = "UFV;Segurança Patrimonial;Pronta Resposta;Fibra;Digifort;Anydesk;Total Cam;Cam ON\n";
+
+        // 2. Ordenar as usinas por nome (A-Z)
+        dados.sort((a, b) => a.ufv.localeCompare(b.ufv));
+
+        // 3. Montar as linhas
+        dados.forEach(u => {
+            const linha = [
+                u.ufv || "N/A",
+                
+                u.fibra || "OK",
+                u.digifort || "OK",
+                u.anydesk || "OK",
+                u.totalCam || 0,
+                u.onCam || 0,
+		u.seguranca || "SEM NECESSIDADE",
+                u.pronta_resposta || "INATIVO"
+
+            ];
+            csv += linha.join(";") + "\n";
+        });
+
+        // 4. Criar o ficheiro com BOM (\ufeff) para corrigir acentos e cedilhas
+        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        // 5. Gatilho de download
+        const link = document.createElement("a");
+        const dataHoje = new Date().toLocaleDateString().replace(/\//g, '-');
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Status_Infraestrutura_UFVs_${dataHoje}.csv`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    request.onerror = () => {
+        alert("Erro ao aceder à base de dados para exportação.");
+    };
+}
     </script>
 </body>
 </html>
-
 
 
