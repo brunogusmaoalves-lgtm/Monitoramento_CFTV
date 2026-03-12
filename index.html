@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoramento CFTV - IVI Energia</title>
     <script src="https://cdn.tailwindcss.com"></script>
-	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-analytics-compat.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @media print { .no-print { display: none; } }
@@ -239,7 +236,7 @@
             "São Joaquim da Barra 2", "Serra do Mel", "Serra do Mel 2", "Vassouras", "Naque"
         ];
 
-        const request = rtdb.ref.open("MonitoramentoCFTV_V1", 1);
+        const request = indexedDB.open("MonitoramentoCFTV_V1", 1);
         request.onupgradeneeded = (e) => {
             db = e.target.result;
             db.createObjectStore("ocorrencias", { keyPath: "id", autoIncrement: true });
@@ -531,22 +528,6 @@
                 link.click();
             };
         }
-		<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyAtiizTXoMEUxRTfjrQeiD3xpgx1BvYgPc",
-        authDomain: "sistema-cftv.firebaseapp.com",
-        databaseURL: "https://sistema-cftv-default-rtdb.firebaseio.com",
-        projectId: "sistema-cftv",
-        storageBucket: "sistema-cftv.firebasestorage.app",
-        messagingSenderId: "758248400848",
-        appId: "1:758248400848:web:d872e1739dd4eafc86fbd5",
-        measurementId: "G-KPXGJX7VBP"
-    };
-
-    // Inicialização obrigatória
-    firebase.initializeApp(firebaseConfig);
-    const rtdb = firebase.database();
     </script>
 </body>
 </html>
-
