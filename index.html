@@ -27,7 +27,7 @@
             <div class="space-y-4 text-left">
                 <input type="text" id="userInput" placeholder="Usuário" class="w-full border-2 p-3 rounded-xl outline-none focus:border-emerald-500 transition text-sm">
                 <input type="password" id="passInput" placeholder="Senha" class="w-full border-2 p-3 rounded-xl outline-none focus:border-emerald-500 transition text-sm">
-                <button onclick="autenticar()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg transition-all active:scale-95 text-xs">ACESSAR PAINEL</button>
+                <button onclick="autenticar()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg transition-all active:scale-95 text-xs uppercase">Acessar Painel</button>
             </div>
         </div>
     </div>
@@ -163,19 +163,24 @@
     </div>
 
     <script>
-        // CONFIGURAÇÕES FIREBASE
+        // CONFIGURAÇÕES FIREBASE FORNECIDAS 
         const firebaseConfig = {
             apiKey: "AIzaSyAtiizTXoMEUxRTfjrQeiD3xpgx1BvYgPc",
             authDomain: "sistema-cftv.firebaseapp.com",
             databaseURL: "https://sistema-cftv-default-rtdb.firebaseio.com",
             projectId: "sistema-cftv",
-            appId: "1:758248400848:web:d872e1739dd4eafc86fbd5"
+            storageBucket: "sistema-cftv.firebasestorage.app",
+            messagingSenderId: "758248400848",
+            appId: "1:758248400848:web:d872e1739dd4eafc86fbd5",
+            measurementId: "G-KPXGJX7VBP"
         };
+
+        // Inicializar Firebase Compat 
         firebase.initializeApp(firebaseConfig);
         const rtdb = firebase.database();
 
-        const CREDENCIAIS = { u: "admin", p: "usina2026", n: "Gestor Operacional" };
-        const NOMES_USINAS = [
+        const CREDENCIAIS = { u: "admin", p: "usina2026", n: "Gestor Operacional" }; [cite: 41]
+        const NOMES_USINAS = [ [cite: 42]
             "Água Clara", "Almino Afonso", "Aloândia 1", "Aparecida do Taboado", "Araruama 1", 
             "Araruama 2", "Araruama 3", "Bonópolis", "Borda da Mata", "Botelhos 2", 
             "Brejinho", "Buriti Alegre", "Cachoeira Alta 1", "Cambuí", "Campo Grande", 
@@ -190,96 +195,95 @@
             "São Joaquim da Barra 2", "Serra do Mel", "Serra do Mel 2", "Vassouras", "Naque"
         ];
 
-        let dadosOcorrenciasLocal = {};
-        let dadosStatusLocal = {};
+        let dadosOcorrenciasLocal = {}; [cite: 45]
+        let dadosStatusLocal = {}; [cite: 45]
 
-        function initApp() {
-            // Monitorar Ocorrências
+        function initApp() { [cite: 45]
+            // Escutar Ocorrências [cite: 45]
             rtdb.ref("ocorrencias").on('value', (snap) => {
                 dadosOcorrenciasLocal = snap.val() || {};
                 renderizarOcorrencias(dadosOcorrenciasLocal);
             });
 
-            // Monitorar Status das UFVs
+            // Escutar Status das UFVs [cite: 46]
             rtdb.ref("ufv_status").on('value', (snap) => {
                 dadosStatusLocal = snap.val() || {};
                 if (Object.keys(dadosStatusLocal).length === 0) popularStatusIniciais();
                 else renderizarUFVs(dadosStatusLocal);
             });
 
-            popularSelectUsinas();
-            if(localStorage.getItem('session_cftv')) mostrarApp();
+            popularSelectUsinas(); [cite: 47]
+            if(localStorage.getItem('session_cftv')) mostrarApp(); [cite: 47]
         }
 
-        function popularSelectUsinas() {
+        function popularSelectUsinas() { [cite: 47]
             const select = document.getElementById('usina');
             select.innerHTML = '<option value="" disabled selected>Selecione a Usina</option>' + 
-                NOMES_USINAS.sort().map(n => `<option>${n}</option>`).join('');
+                NOMES_USINAS.sort().map(n => `<option>${n}</option>`).join(''); [cite: 48]
         }
 
-        function popularStatusIniciais() {
+        function popularStatusIniciais() { [cite: 49]
             NOMES_USINAS.forEach(nome => {
                 const id = nome.toLowerCase().replace(/\s/g, '_');
-                rtdb.ref("ufv_status/" + id).set({
+                rtdb.ref("ufv_status/" + id).set({ [cite: 49]
                     id: id, ufv: nome, digifort: "OK", anydesk: "OK",
-                    totalCam: 8, onCam: 8, fibra: "OK", seguranca: "SEM NECESSIDADE", pronta_resposta: "INATIVO"
+                    totalCam: 8, onCam: 8, fibra: "OK", seguranca: "SEM NECESSIDADE", pronta_resposta: "INATIVO" [cite: 50]
                 });
             });
         }
 
-        // REGISTRO DE OCORRÊNCIA
+        // Salvar Nova Ocorrência [cite: 51]
         document.getElementById('formRegistro').onsubmit = function(e) {
-            e.preventDefault();
-            const novo = {
+            e.preventDefault(); [cite: 51]
+            const novo = { [cite: 52]
                 operador: document.getElementById('operador').value,
                 impacto: document.getElementById('impacto').value,
                 usina: document.getElementById('usina').value,
                 tipo: document.getElementById('tipo').value,
                 local: document.getElementById('local').value,
-                desc: document.getElementById('desc').value,
+                desc: document.getElementById('desc').value, [cite: 53]
                 status: "Aberto",
                 data: document.getElementById('dataEventoManual').value,
-                timestamp: Date.now()
+                timestamp: Date.now() [cite: 53]
             };
-            rtdb.ref("ocorrencias").push(novo).then(() => {
+            rtdb.ref("ocorrencias").push(novo).then(() => { [cite: 54]
                 this.reset();
                 alert("Evento salvo na nuvem!");
             });
         };
 
-        function renderizarOcorrencias(dados) {
+        function renderizarOcorrencias(dados) { [cite: 55]
             const container = document.getElementById('tabelaDados');
-            const lista = Object.keys(dados).map(id => ({ id, ...dados[id] })).sort((a,b) => b.timestamp - a.timestamp);
+            const lista = Object.keys(dados).map(id => ({ id, ...dados[id] })).sort((a,b) => b.timestamp - a.timestamp); [cite: 56]
             
             container.innerHTML = lista.map(o => `
                 <tr class="hover:bg-slate-50 border-b">
                     <td class="px-6 py-4">
                         <span class="px-2 py-1 rounded text-[9px] font-black uppercase ${o.status === 'Aberto' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}">${o.status}</span>
-                        <div class="mt-1 text-[8px] font-bold text-slate-400">${o.impacto}</div>
+                        <div class="mt-1 text-[8px] font-bold text-slate-400">${o.impacto}</div> [cite: 58]
                     </td>
                     <td class="px-6 py-4 text-[10px]">
                         <div class="text-emerald-600 font-bold uppercase">${o.usina}</div>
-                        <div class="font-black text-slate-700 uppercase">${o.operador}</div>
+                        <div class="font-black text-slate-700 uppercase">${o.operador}</div> [cite: 59]
                     </td>
                     <td class="px-6 py-4">
                         <div class="font-bold text-slate-800">${o.tipo}</div>
-                        <div class="text-[10px] text-slate-500">${o.desc}</div>
+                        <div class="text-[10px] text-slate-500">${o.desc}</div> [cite: 60]
                         ${o.obs ? `<div class="mt-2 text-[9px] bg-emerald-50 p-2 border-l-2 border-emerald-500"><b>SOLUÇÃO:</b> ${o.obs}</div>` : ''}
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex gap-3 justify-center">
                             <button onclick="openModal('${o.id}')" class="text-slate-300 hover:text-emerald-600"><i class="fas fa-edit"></i></button>
                             <button onclick="excluirOcorrencia('${o.id}')" class="text-slate-200 hover:text-red-500"><i class="fas fa-trash"></i></button>
-                        </div>
+                        </div> [cite: 61]
                     </td>
                 </tr>
-            `).join('');
+            `).join(''); [cite: 62]
         }
 
-        // RENDERIZAR TABELA DE STATUS UFVs
-        function renderizarUFVs(dados) {
+        function renderizarUFVs(dados) { [cite: 63]
             const container = document.getElementById('tabelaUFVs');
-            const lista = Object.values(dados).sort((a,b) => a.ufv.localeCompare(b.ufv));
+            const lista = Object.values(dados).sort((a,b) => a.ufv.localeCompare(b.ufv)); [cite: 64]
             
             container.innerHTML = lista.map(u => `
                 <tr>
@@ -287,101 +291,100 @@
                     <td class="text-center">
                         <select onchange="updateUFV('${u.id}', 'digifort', this.value)" class="bg-transparent font-black ${u.digifort === 'OK' ? 'text-emerald-500' : 'text-red-500'}">
                             <option value="OK" ${u.digifort === 'OK' ? 'selected' : ''}>OK</option>
-                            <option value="OFF" ${u.digifort !== 'OK' ? 'selected' : ''}>OFF</option>
+                            <option value="OFF" ${u.digifort !== 'OK' ? 'selected' : ''}>OFF</option> [cite: 65]
                         </select>
                     </td>
                     <td class="text-center">
                         <select onchange="updateUFV('${u.id}', 'anydesk', this.value)" class="bg-transparent font-black ${u.anydesk === 'OK' ? 'text-emerald-500' : 'text-red-500'}">
                             <option value="OK" ${u.anydesk === 'OK' ? 'selected' : ''}>OK</option>
-                            <option value="OFF" ${u.anydesk !== 'OK' ? 'selected' : ''}>OFF</option>
+                            <option value="OFF" ${u.anydesk !== 'OK' ? 'selected' : ''}>OFF</option> [cite: 67]
                         </select>
                     </td>
                     <td class="text-center font-bold">
                         <input type="number" onblur="updateUFV('${u.id}', 'onCam', this.value)" value="${u.onCam}" class="w-8 bg-transparent text-right"> / 
-                        <input type="number" onblur="updateUFV('${u.id}', 'totalCam', this.value)" value="${u.totalCam}" class="w-8 bg-transparent">
+                        <input type="number" onblur="updateUFV('${u.id}', 'totalCam', this.value)" value="${u.totalCam}" class="w-8 bg-transparent"> [cite: 69]
                     </td>
-                    <td><input type="text" onblur="updateUFV('${u.id}', 'fibra', this.value)" value="${u.fibra}" class="w-full bg-transparent outline-none focus:bg-white px-1"></td>
-                    <td><input type="text" onblur="updateUFV('${u.id}', 'seguranca', this.value)" value="${u.seguranca}" class="w-full bg-transparent outline-none focus:bg-white px-1"></td>
-                    <td><input type="text" onblur="updateUFV('${u.id}', 'pronta_resposta', this.value)" value="${u.pronta_resposta}" class="w-full bg-transparent outline-none focus:bg-white px-1"></td>
+                    <td><input type="text" onblur="updateUFV('${u.id}', 'fibra', this.value)" value="${u.fibra}" class="w-full bg-transparent outline-none px-1"></td> [cite: 69]
+                    <td><input type="text" onblur="updateUFV('${u.id}', 'seguranca', this.value)" value="${u.seguranca}" class="w-full bg-transparent outline-none px-1"></td> [cite: 70]
+                    <td><input type="text" onblur="updateUFV('${u.id}', 'pronta_resposta', this.value)" value="${u.pronta_resposta}" class="w-full bg-transparent outline-none px-1"></td> [cite: 70]
                 </tr>
             `).join('');
         }
 
-        function updateUFV(id, campo, valor) {
-            rtdb.ref(`ufv_status/${id}`).update({ [campo]: valor });
+        function updateUFV(id, campo, valor) { [cite: 71]
+            rtdb.ref(`ufv_status/${id}`).update({ [campo]: valor }); [cite: 71]
         }
 
-        // GERAR RELATÓRIO EXCEL (CSV)
+        // Exportar Relatório [cite: 72]
         function gerarRelatorioExcel() {
-            const dados = Object.values(dadosStatusLocal).sort((a,b) => a.ufv.localeCompare(b.ufv));
-            let csv = "UFV;Fibra;Digifort;Anydesk;Câmeras ON;Câmeras Total;Segurança;Pronta Resposta\n";
+            const dados = Object.values(dadosStatusLocal).sort((a,b) => a.ufv.localeCompare(b.ufv)); [cite: 72]
+            let csv = "UFV;Fibra;Digifort;Anydesk;Câmeras ON;Câmeras Total;Segurança;Pronta Resposta\n"; [cite: 73]
 
             dados.forEach(u => {
-                csv += `${u.ufv};${u.fibra};${u.digifort};${u.anydesk};${u.onCam};${u.totalCam};${u.seguranca};${u.pronta_resposta}\n`;
+                csv += `${u.ufv};${u.fibra};${u.digifort};${u.anydesk};${u.onCam};${u.totalCam};${u.seguranca};${u.pronta_resposta}\n`; [cite: 73]
             });
 
-            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `Relatorio_Status_UFVs_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' }); [cite: 74]
+            const url = URL.createObjectURL(blob); [cite: 74]
+            const link = document.createElement("a"); [cite: 74]
+            link.setAttribute("href", url); [cite: 75]
+            link.setAttribute("download", `Relatorio_Status_UFVs_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`); [cite: 75]
             link.click();
         }
 
-        // FUNÇÕES DE INTERFACE
-        function excluirOcorrencia(id) {
-            if(confirm("Remover permanentemente este registro da nuvem?")) rtdb.ref(`ocorrencias/${id}`).remove();
+        function excluirOcorrencia(id) { [cite: 75]
+            if(confirm("Remover permanentemente este registro?")) rtdb.ref(`ocorrencias/${id}`).remove(); [cite: 75]
         }
 
-        let idEditando = null;
-        function openModal(id) {
+        let idEditando = null; [cite: 76]
+        function openModal(id) { [cite: 77]
             idEditando = id;
-            const item = dadosOcorrenciasLocal[id];
+            const item = dadosOcorrenciasLocal[id]; [cite: 78]
             document.getElementById('editStatus').value = item.status;
             document.getElementById('editObs').value = item.obs || "";
-            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.remove('hidden'); [cite: 78]
         }
 
-        document.getElementById('saveEditBtn').onclick = function() {
+        document.getElementById('saveEditBtn').onclick = function() { [cite: 79]
             rtdb.ref(`ocorrencias/${idEditando}`).update({
                 status: document.getElementById('editStatus').value,
                 obs: document.getElementById('editObs').value
-            }).then(closeModal);
+            }).then(closeModal); [cite: 79]
         };
 
-        function closeModal() { document.getElementById('editModal').classList.add('hidden'); }
+        function closeModal() { document.getElementById('editModal').classList.add('hidden'); } [cite: 80]
 
-        function autenticar() {
+        function autenticar() { [cite: 80]
             if(document.getElementById('userInput').value === CREDENCIAIS.u && document.getElementById('passInput').value === CREDENCIAIS.p) {
-                localStorage.setItem('session_cftv', CREDENCIAIS.n);
-                mostrarApp();
+                localStorage.setItem('session_cftv', CREDENCIAIS.n); [cite: 80]
+                mostrarApp(); [cite: 81]
             } else alert("Acesso negado.");
         }
 
-        function mostrarApp() {
+        function mostrarApp() { [cite: 81]
             document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            document.getElementById('displayUser').innerText = localStorage.getItem('session_cftv');
+            document.getElementById('mainApp').classList.remove('hidden'); [cite: 82]
+            document.getElementById('displayUser').innerText = localStorage.getItem('session_cftv'); [cite: 82]
         }
 
-        function logout() { localStorage.removeItem('session_cftv'); location.reload(); }
+        function logout() { localStorage.removeItem('session_cftv'); location.reload(); } [cite: 82, 83]
 
-        function switchTab(tab) {
+        function switchTab(tab) { [cite: 83]
             document.getElementById('contentOcorrencias').classList.toggle('hidden', tab !== 'ocorrencias');
-            document.getElementById('contentStatus').classList.toggle('hidden', tab !== 'status');
+            document.getElementById('contentStatus').classList.toggle('hidden', tab !== 'status'); [cite: 84]
             document.getElementById('tabBtnOcorrencias').classList.toggle('tab-active', tab === 'ocorrencias');
-            document.getElementById('tabBtnStatus').classList.toggle('tab-active', tab === 'status');
+            document.getElementById('tabBtnStatus').classList.toggle('tab-active', tab === 'status'); [cite: 84]
         }
 
-        function filtrarOcorrencias() {
+        function filtrarOcorrencias() { [cite: 85]
             const termo = document.getElementById('search').value.toLowerCase();
-            const linhas = document.querySelectorAll('#tabelaDados tr');
+            const linhas = document.querySelectorAll('#tabelaDados tr'); [cite: 86]
             linhas.forEach(l => {
                 l.style.display = l.innerText.toLowerCase().includes(termo) ? '' : 'none';
             });
         }
 
-        window.onload = initApp;
+        window.onload = initApp; [cite: 87]
     </script>
 </body>
 </html>
