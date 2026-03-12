@@ -91,17 +91,19 @@
                         </div>
                         <input type="text" id="local" placeholder="Local / ID Câmera" class="w-full p-2 bg-slate-50 border rounded-lg text-xs outline-none focus:border-emerald-500" required>
                         <textarea id="desc" rows="3" placeholder="Descrição detalhada..." class="w-full p-2 bg-slate-50 border rounded-lg text-xs outline-none focus:border-emerald-500" required></textarea>
-                        
+                         <input type="file" id="foto" accept="image/*" class="w-full p-1 text-[10px] border border-dashed rounded-lg bg-slate-50">
+                    
+                
+
                         <div class="flex gap-2">
                             <button type="button" onclick="exportarExcel()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-xs uppercase">
                                 <i class="fas fa-file-excel"></i> Excel
                             </button>
                             <button type="submit" class="flex-[2] bg-emerald-500 text-white py-3 rounded-xl font-bold hover:bg-emerald-600 transition shadow-lg text-xs uppercase tracking-widest">Registrar Evento</button>
                         </div>
-                        <input type="file" id="foto" accept="image/*" class="w-full p-1 text-[10px] border border-dashed rounded-lg bg-slate-50">
-                    </form>
-                </div>
+                  </form>
             </div>
+	 </div>
 
             <div class="lg:col-span-8 space-y-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-center no-print">
