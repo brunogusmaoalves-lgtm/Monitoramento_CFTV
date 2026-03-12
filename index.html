@@ -59,6 +59,11 @@
                         <i class="fas fa-plus-circle text-emerald-500"></i> Novo Registro
                     </h3>
                     <form id="formRegistro" class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase">Data/Hora do Início do Evento</label>
+                            <input type="datetime-local" id="dataEventoManual" class="w-full mt-1 p-2 bg-slate-50 border rounded-lg text-xs outline-none focus:border-emerald-500">
+                        </div>
+
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase">Operador</label>
@@ -86,11 +91,14 @@
                         </div>
                         <input type="text" id="local" placeholder="Local / ID Câmera" class="w-full p-2 bg-slate-50 border rounded-lg text-xs outline-none focus:border-emerald-500" required>
                         <textarea id="desc" rows="3" placeholder="Descrição detalhada..." class="w-full p-2 bg-slate-50 border rounded-lg text-xs outline-none focus:border-emerald-500" required></textarea>
-			<button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md">
-    			<i class="fas fa-file-excel"></i> Exportar Excel
-			</button>
+                        
+                        <div class="flex gap-2">
+                            <button type="button" onclick="exportarExcel()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-xs uppercase">
+                                <i class="fas fa-file-excel"></i> Excel
+                            </button>
+                            <button type="submit" class="flex-[2] bg-emerald-500 text-white py-3 rounded-xl font-bold hover:bg-emerald-600 transition shadow-lg text-xs uppercase tracking-widest">Registrar Evento</button>
+                        </div>
                         <input type="file" id="foto" accept="image/*" class="w-full p-1 text-[10px] border border-dashed rounded-lg bg-slate-50">
-                        <button type="submit" class="w-full bg-emerald-500 text-white py-3 rounded-xl font-bold hover:bg-emerald-600 transition shadow-lg text-xs uppercase tracking-widest">Registrar Evento</button>
                     </form>
                 </div>
             </div>
@@ -101,7 +109,7 @@
                         <i class="fas fa-search absolute left-3 top-3 text-slate-400 text-xs"></i>
                         <input type="text" id="search" oninput="renderizarTabela()" placeholder="Filtrar Usina, Operador, Status ou Data..." class="w-full pl-10 p-2 bg-slate-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
-                    <button onclick="window.print()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase"><i class="fas fa-print mr-2"></i>Exportar</button>
+                    <button onclick="window.print()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase"><i class="fas fa-print mr-2"></i>Imprimir PDF</button>
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -109,7 +117,7 @@
                         <thead class="bg-slate-50 border-b text-[10px] text-slate-400 font-black uppercase tracking-wider">
                             <tr>
                                 <th class="px-6 py-4">Status / Geração</th>
-                                <th class="px-6 py-4">Usina / Operador</th>
+                                <th class="px-6 py-4">Usina / Operador / Data Início</th>
                                 <th class="px-6 py-4">Ocorrência</th>
                                 <th class="px-6 py-4 text-center">Ações</th>
                             </tr>
@@ -121,31 +129,20 @@
         </main>
 
         <main id="contentStatus" class="hidden p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        
-        <div class="p-6 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 no-print">
-            <div>
-                <h3 class="font-black text-slate-800 uppercase text-sm tracking-tighter">Status de Infraestrutura</h3>
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Painel Operacional</p>
-            </div>
-            
-            <div class="flex gap-2 w-full sm:w-auto">
-                <button onclick="window.print()" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all">
-                    <i class="fas fa-file-pdf"></i> PDF
-                </button>
-                <button onclick="exportarStatusUFVExcel()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all">
-                    <i class="fas fa-file-excel"></i> Excel
-                </button>
-            </div>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                
-                 
-
-                    
+                <div class="p-6 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 no-print">
+                    <div>
+                        <h3 class="font-black text-slate-800 uppercase text-sm tracking-tighter">Status de Infraestrutura</h3>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Painel Operacional</p>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button onclick="window.print()" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button onclick="exportarStatusUFVExcel()" class="flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto max-h-[75vh]">
                     <table class="w-full text-left border-collapse sticky-header">
@@ -157,8 +154,8 @@
                                 <th class="px-4 py-3 border-b text-center">Total Câm</th>
                                 <th class="px-4 py-3 border-b text-center">Câm. ON</th>
                                 <th class="px-4 py-3 border-b">Fibra Sensitiva</th>
-				<th class="px-4 py-3 border-b">Segurança Patrimonial</th>
-				<th class="px-4 py-3 border-b">Pronta Resposta</th>
+                                <th class="px-4 py-3 border-b">Segurança Patrimonial</th>
+                                <th class="px-4 py-3 border-b">Pronta Resposta</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaUFVs" class="text-[11px] divide-y divide-slate-100"></tbody>
@@ -178,7 +175,6 @@
                 <div id="editFotoContainer" class="hidden flex flex-col items-center p-3 bg-slate-50 rounded-xl border border-dashed">
                     <img id="editFotoView" src="" onclick="window.open(this.src)" class="h-32 w-auto object-contain rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform">
                 </div>
-                
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</label>
@@ -195,23 +191,20 @@
                         </select>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Usina</label>
                         <select id="editUsina" class="w-full mt-1 p-2 border rounded-lg bg-slate-50 text-xs outline-none focus:border-emerald-500"></select>
                     </div>
                     <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Data Regularização</label>
-                        <input type="date" id="editDataReg" class="w-full mt-1 p-2 border rounded-lg bg-slate-50 text-xs outline-none focus:border-emerald-500">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Data Finalização</label>
+                        <input type="datetime-local" id="editDataReg" class="w-full mt-1 p-2 border rounded-lg bg-slate-50 text-xs outline-none focus:border-emerald-500">
                     </div>
                 </div>
-
                 <div>
                     <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Resumo da Solução</label>
                     <textarea id="editObs" rows="3" class="w-full mt-1 p-3 border rounded-lg bg-emerald-50 text-xs outline-none font-medium focus:ring-2 focus:ring-emerald-500" placeholder="Descreva as medidas tomadas..."></textarea>
                 </div>
-
                 <div class="flex gap-3 pt-4 border-t">
                     <button onclick="closeModal()" class="flex-1 font-bold text-slate-400 text-xs uppercase tracking-widest">Cancelar</button>
                     <button id="saveEditBtn" class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg hover:bg-emerald-600">Salvar Alterações</button>
@@ -240,7 +233,6 @@
             "São Joaquim da Barra 2", "Serra do Mel", "Serra do Mel 2", "Vassouras", "Naque"
         ];
 
-        // INICIALIZAÇÃO DB
         const request = indexedDB.open("MonitoramentoCFTV_V1", 1);
         request.onupgradeneeded = (e) => {
             db = e.target.result;
@@ -260,7 +252,11 @@
             store.count().onsuccess = (e) => {
                 if (e.target.result === 0) {
                     NOMES_USINAS.forEach(nome => {
-                        store.add({ id: nome.toLowerCase().replace(/\s/g, '_'), ufv: nome, digifort: "OK", anydesk: "OK", totalCam: 8, onCam: 8, fibra: "OK"});
+                        store.add({ 
+                            id: nome.toLowerCase().replace(/\s/g, '_'), 
+                            ufv: nome, digifort: "OK", anydesk: "OK", totalCam: 8, onCam: 8, fibra: "OK",
+                            seguranca: "SEM NECESSIDADE", pronta_resposta: "ATIVO"
+                        });
                     });
                 }
                 setTimeout(() => { renderizarUFVs(); popularUsinasSelect(); }, 100);
@@ -282,13 +278,10 @@
             document.getElementById('displayUser').innerText = localStorage.getItem('solar_session');
         }
 
-        // FUNÇÃO SAIR CORRIGIDA
         function logout() {
             localStorage.removeItem('solar_session');
             document.getElementById('mainApp').classList.add('hidden');
             document.getElementById('loginPage').style.display = 'flex';
-            document.getElementById('userInput').value = '';
-            document.getElementById('passInput').value = '';
         }
 
         function switchTab(tab) {
@@ -302,7 +295,12 @@
             if(!db) return;
             const q = document.getElementById('search').value.toLowerCase();
             db.transaction("ocorrencias").objectStore("ocorrencias").getAll().onsuccess = (e) => {
-                const lista = e.target.result.filter(o => o.usina.toLowerCase().includes(q) || o.status.toLowerCase().includes(q) || o.operador.toLowerCase().includes(q) || o.dataReg.toLowerCase().includes(q));
+                const lista = e.target.result.filter(o => 
+                    o.usina.toLowerCase().includes(q) || 
+                    o.status.toLowerCase().includes(q) || 
+                    o.operador.toLowerCase().includes(q) || 
+                    (o.data && o.data.includes(q))
+                );
                 document.getElementById('tabelaDados').innerHTML = lista.reverse().map(o => `
                     <tr class="hover:bg-slate-50 transition border-b">
                         <td class="px-6 py-4">
@@ -317,10 +315,10 @@
                         <td class="px-6 py-4">
                             <div class="font-bold text-slate-800">${o.tipo}</div>
                             <div class="text-[10px] text-slate-500 uppercase">${o.local}</div>
-                            ${o.obs ? `<div class="text-[9px] mt-2 text-emerald-700 bg-emerald-50 p-2 border-l-4 border-emerald-500 rounded"><b>SOLUÇÃO:</b> ${o.obs}${o.dataReg ? `<br><b class='text-emerald-900'>REGULARIZADO EM: ${o.dataReg.split('-').reverse().join('/')}</b>` : ''}</div>` : ''}
+                            ${o.obs ? `<div class="text-[9px] mt-2 text-emerald-700 bg-emerald-50 p-2 border-l-4 border-emerald-500 rounded"><b>SOLUÇÃO:</b> ${o.obs}${o.dataReg ? `<br><b class='text-emerald-900'>FINALIZADO EM: ${o.dataReg.split('-').reverse().join('/')}</b>` : ''}</div>` : ''}
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <div class="flex gap-3 justify-center">
+                            <div class="flex gap-3 justify-center no-print">
                                 <button onclick="openModal(${o.id})" class="text-slate-300 hover:text-emerald-600 transition"><i class="fas fa-edit"></i></button>
                                 <button onclick="excluir(${o.id})" class="text-slate-200 hover:text-red-500 transition"><i class="fas fa-trash"></i></button>
                             </div>
@@ -335,17 +333,15 @@
                 const lista = e.target.result.sort((a,b) => a.ufv.localeCompare(b.ufv));
                 document.getElementById('tabelaUFVs').innerHTML = lista.map(u => `
                     <tr>
-<td class="px-4 py-3 font-black text-emerald-700 uppercase">${u.ufv}</td>
+                        <td class="px-4 py-3 font-black text-emerald-700 uppercase">${u.ufv}</td>
                         <td class="px-4 py-3 text-center">
-   
-                        
-                            <select onchange="updateUFV('${u.id}', 'digifort', this.value)" class="bg-transparent border-none font-bold text-center ${u.digifort!=='OK'?'text-red-500':'text-emerald-600'} outline-none">
+                            <select onchange="updateUFV('${u.id}', 'digifort', this.value)" class="bg-transparent border-none font-bold text-center ${u.digifort!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
                                 <option value="OK" ${u.digifort==='OK'?'selected':''}>OK</option>
                                 <option value="OFFLINE" ${u.digifort!=='OK'?'selected':''}>OFFLINE</option>
                             </select>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'anydesk', this.value)" class="bg-transparent border-none font-bold text-center ${u.anydesk!=='OK'?'text-red-500':'text-emerald-600'} outline-none">
+                            <select onchange="updateUFV('${u.id}', 'anydesk', this.value)" class="bg-transparent border-none font-bold text-center ${u.anydesk!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
                                 <option value="OK" ${u.anydesk==='OK'?'selected':''}>OK</option>
                                 <option value="OFFLINE" ${u.anydesk!=='OK'?'selected':''}>OFFLINE</option>
                             </select>
@@ -353,31 +349,28 @@
                         <td class="px-4 py-3 text-center"><input type="number" value="${u.totalCam}" onblur="updateUFV('${u.id}', 'totalCam', this.value)" class="w-12 text-center bg-transparent outline-none"></td>
                         <td class="px-4 py-3 text-center"><input type="number" value="${u.onCam}" onblur="updateUFV('${u.id}', 'onCam', this.value)" class="w-12 text-center bg-transparent font-bold ${u.onCam < u.totalCam ? 'text-red-500':'text-emerald-600'} outline-none"></td>
                         <td class="px-4 py-3">
-                            <select onchange="updateUFV('${u.id}', 'fibra', this.value)" class="bg-transparent border-none ${u.fibra!=='OK'?'text-red-500':'text-emerald-600'} outline-none">
+                            <select onchange="updateUFV('${u.id}', 'fibra', this.value)" class="bg-transparent border-none ${u.fibra!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
                                 <option value="OK" ${u.fibra==='OK'?'selected':''}>OK</option>
                                 <option value="ROMPIDA" ${u.fibra==='ROMPIDA'?'selected':''}>ROMPIDA</option>
                                 <option value="N/A" ${u.fibra==='N/A'?'selected':''}>NÃO TEM</option>
                             </select>
                         </td>
-                          <td class="px-4 py-3 text-center">
-    				<select onchange="updateUFV('${u.id}', 'seguranca', this.value)" 
-            			class="bg-transparent border-none ${u.seguranca === 'SEM NECESSIDADE' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
-        			<option value="MOBILIZADA" ${u.seguranca === 'MOBILIZADA' ? 'selected' : ''}>MOBILIZADA</option>
-       				 <option value="SEM NECESSIDADE" ${u.seguranca === 'SEM NECESSIDADE' ? 'selected' : ''}>SEM NECESSIDADE</option>
-  				  </select>
-			</td>
-			<td class="px-4 py-3 text-center">
-   			 <select onchange="updateUFV('${u.id}', 'pronta_resposta', this.value)" 
-            		class="bg-transparent border-none ${u.pronta_resposta === 'ATIVO' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
-        		<option value="ATIVO" ${u.pronta_resposta === 'ATIVO' ? 'selected' : ''}>ATIVO</option>
-        		<option value="INATIVO" ${u.pronta_resposta === 'INATIVO' ? 'selected' : ''}>INATIVO</option>
-   			 </select>
-			</td>
+                        <td class="px-4 py-3 text-center">
+                            <select onchange="updateUFV('${u.id}', 'seguranca', this.value)" class="bg-transparent border-none ${u.seguranca === 'SEM NECESSIDADE' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
+                                <option value="MOBILIZADA" ${u.seguranca === 'MOBILIZADA' ? 'selected' : ''}>MOBILIZADA</option>
+                                <option value="SEM NECESSIDADE" ${u.seguranca === 'SEM NECESSIDADE' ? 'selected' : ''}>SEM NECESSIDADE</option>
+                            </select>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <select onchange="updateUFV('${u.id}', 'pronta_resposta', this.value)" class="bg-transparent border-none ${u.pronta_resposta === 'ATIVO' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
+                                <option value="ATIVO" ${u.pronta_resposta === 'ATIVO' ? 'selected' : ''}>ATIVO</option>
+                                <option value="INATIVO" ${u.pronta_resposta === 'INATIVO' ? 'selected' : ''}>INATIVO</option>
+                            </select>
+                        </td>
                     </tr>
                 `).join('');
             };
         }
-
 
         function updateUFV(id, campo, valor) {
             const trans = db.transaction("ufv_status", "readwrite");
@@ -399,8 +392,13 @@
             };
         }
 
+        // FUNÇÃO ONSUBMIT ATUALIZADA COM DATA MANUAL
         document.getElementById('formRegistro').onsubmit = (e) => {
             e.preventDefault();
+            
+            const dataManual = document.getElementById('dataEventoManual').value;
+            const dataFinal = dataManual ? new Date(dataManual).toISOString() : new Date().toISOString();
+            
             const f = document.getElementById('foto').files[0];
             const s = (img = null) => {
                 const trans = db.transaction("ocorrencias", "readwrite");
@@ -411,11 +409,22 @@
                     tipo: document.getElementById('tipo').value,
                     local: document.getElementById('local').value,
                     desc: document.getElementById('desc').value,
-                    foto: img, status: "Aberto", obs: "", dataReg: "", data: new Date().toISOString()
+                    foto: img, 
+                    status: "Aberto", 
+                    obs: "", 
+                    dataReg: "", 
+                    data: dataFinal // Usa a data manual ou atual
                 });
-                trans.oncomplete = () => { document.getElementById('formRegistro').reset(); renderizarTabela(); };
+                trans.oncomplete = () => { 
+                    document.getElementById('formRegistro').reset(); 
+                    renderizarTabela(); 
+                };
             };
-            if(f) { const r = new FileReader(); r.onload = () => s(r.result); r.readAsDataURL(f); } else s();
+            if(f) { 
+                const r = new FileReader(); 
+                r.onload = () => s(r.result); 
+                r.readAsDataURL(f); 
+            } else s();
         };
 
         function openModal(id) {
@@ -449,113 +458,73 @@
         };
 
         function excluir(id) { if(confirm("Deseja excluir?")) { db.transaction("ocorrencias", "readwrite").objectStore("ocorrencias").delete(id).onsuccess = renderizarTabela; } }
-function exportarExcel() {
-    // Abre a conexão de leitura com o banco de dados das ocorrências
-    const transaction = db.transaction("ocorrencias", "readonly");
-    const store = transaction.objectStore("ocorrencias");
-    const request = store.getAll();
 
-    request.onsuccess = () => {
-        const dados = request.result;
-        
-        if (dados.length === 0) {
-            alert("Não há dados registrados para exportar.");
-            return;
+        function exportarExcel() {
+            const transaction = db.transaction("ocorrencias", "readonly");
+            const store = transaction.objectStore("ocorrencias");
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const dados = request.result;
+                if (dados.length === 0) { alert("Não há dados para exportar."); return; }
+
+                let csv = "Data Início;Operador;Usina;Tipo;Status;Impacto;Solução;Data Final\n";
+                dados.forEach(o => {
+                    const linha = [
+                        new Date(o.data).toLocaleString('pt-BR'),
+                        o.operador || "",
+                        o.usina || "",
+                        o.tipo || "",
+                        o.status || "",
+                        o.impacto || "",
+                        (o.obs || "").replace(/(\n|;)/gm, " "),
+                        o.dataReg || ""
+                    ];
+                    csv += linha.join(";") + "\n";
+                });
+
+                const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `Relatorio_Ocorrencias_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+                link.click();
+            };
         }
 
-        // Cabeçalhos das colunas (Ponto e vírgula é o padrão para Excel no Brasil)
-        let csv = "Data e Hora;Operador;Usina;Tipo de Ocorrência;Status;Impacto;Observações\n";
+        function exportarStatusUFVExcel() {
+            const transaction = db.transaction("ufv_status", "readonly");
+            const store = transaction.objectStore("ufv_status");
+            const request = store.getAll();
 
-        // Mapeia os dados para as linhas do CSV
-        dados.forEach(o => {
-            const linha = [
-                o.dataReg || "",
-                o.operador || "",
-                o.usina || "",
-                o.tipo || "",
-                o.status || "",
-                o.impacto || "",
-                (o.obs || "").replace(/(\r\n|\n|\r|;)/gm, " ") // Remove quebras de linha e ";" para não quebrar colunas
-            ];
-            csv += linha.join(";") + "\n";
-        });
+            request.onsuccess = () => {
+                const dados = request.result;
+                if (dados.length === 0) { alert("Não há dados de status."); return; }
 
-        // Adiciona o caractere BOM (\ufeff) para que o Excel identifique como UTF-8 (corrige acentos)
-        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        
-        // Cria um link invisível para disparar o download
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `Relatorio_Solar_Command_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-    
-    request.onerror = () => {
-        alert("Erro ao acessar o banco de dados para exportação.");
-    };
-}
-function exportarStatusUFVExcel() {
-    // Acede à tabela de status das usinas
-    const transaction = db.transaction("ufv_status", "readonly");
-    const store = transaction.objectStore("ufv_status");
-    const request = store.getAll();
+                let csv = "UFV;Segurança Patrimonial;Pronta Resposta;Fibra;Digifort;Anydesk;Total Cam;Cam ON\n";
+                dados.sort((a, b) => a.ufv.localeCompare(b.ufv));
+                dados.forEach(u => {
+                    const linha = [
+                        u.ufv || "N/A",
+                        u.seguranca || "SEM NECESSIDADE",
+                        u.pronta_resposta || "ATIVO",
+                        u.fibra || "OK",
+                        u.digifort || "OK",
+                        u.anydesk || "OK",
+                        u.totalCam || 0,
+                        u.onCam || 0
+                    ];
+                    csv += linha.join(";") + "\n";
+                });
 
-    request.onsuccess = () => {
-        const dados = request.result;
-        
-        if (dados.length === 0) {
-            alert("Não existem dados de status para exportar.");
-            return;
+                const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `Status_UFVs_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+                link.click();
+            };
         }
-
-        // 1. Cabeçalhos das Colunas (Ponto e vírgula para abrir direto em colunas no Excel BR)
-        let csv = "UFV;Segurança Patrimonial;Pronta Resposta;Fibra;Digifort;Anydesk;Total Cam;Cam ON\n";
-
-        // 2. Ordenar as usinas por nome (A-Z)
-        dados.sort((a, b) => a.ufv.localeCompare(b.ufv));
-
-        // 3. Montar as linhas
-        dados.forEach(u => {
-            const linha = [
-                u.ufv || "N/A",
-                
-                u.fibra || "OK",
-                u.digifort || "OK",
-                u.anydesk || "OK",
-                u.totalCam || 0,
-                u.onCam || 0,
-		u.seguranca || "SEM NECESSIDADE",
-                u.pronta_resposta || "INATIVO"
-
-            ];
-            csv += linha.join(";") + "\n";
-        });
-
-        // 4. Criar o ficheiro com BOM (\ufeff) para corrigir acentos e cedilhas
-        const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        
-        // 5. Gatilho de download
-        const link = document.createElement("a");
-        const dataHoje = new Date().toLocaleDateString().replace(/\//g, '-');
-        
-        link.setAttribute("href", url);
-        link.setAttribute("download", `Status_Infraestrutura_UFVs_${dataHoje}.csv`);
-        link.style.visibility = 'hidden';
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    request.onerror = () => {
-        alert("Erro ao aceder à base de dados para exportação.");
-    };
-}
     </script>
 </body>
 </html>
