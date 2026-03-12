@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoramento CFTV - IVI Energia</title>
     <script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @media print { .no-print { display: none; } }
@@ -235,7 +237,16 @@
             "São Joaquim da Barra 2", "Serra do Mel", "Serra do Mel 2", "Vassouras", "Naque"
         ];
 
-        const request = indexedDB.open("MonitoramentoCFTV_V1", 1);
+        const firebaseConfig = {
+  apiKey: "AIzaSyAtiizTXoMEUxRTfjrQeiD3xpgx1BvYgPc",
+  authDomain: "sistema-cftv.firebaseapp.com",
+  databaseURL: "https://sistema-cftv-default-rtdb.firebaseio.com",
+  projectId: "sistema-cftv",
+  storageBucket: "sistema-cftv.firebasestorage.app",
+  messagingSenderId: "758248400848",
+  appId: "1:758248400848:web:d872e1739dd4eafc86fbd5",
+  measurementId: "G-KPXGJX7VBP"
+};;
         request.onupgradeneeded = (e) => {
             db = e.target.result;
             db.createObjectStore("ocorrencias", { keyPath: "id", autoIncrement: true });
@@ -249,7 +260,7 @@
         };
 
         function verificarEPopularUFVs() {
-            const trans = db.transaction("ufv_status", "readwrite");
+            const trans = rtdb.ref("ufv_status", "readwrite");
             const store = trans.objectStore("ufv_status");
             store.count().onsuccess = (e) => {
                 if (e.target.result === 0) {
@@ -296,7 +307,7 @@
         function renderizarTabela() {
             if(!db) return;
             const q = document.getElementById('search').value.toLowerCase();
-            db.transaction("ocorrencias").objectStore("ocorrencias").getAll().onsuccess = (e) => {
+            rtdb.ref("ocorrencias").objectStore("ocorrencias").getAll().onsuccess = (e) => {
                 const lista = e.target.result.filter(o => 
                     o.usina.toLowerCase().includes(q) || 
                     o.status.toLowerCase().includes(q) || 
@@ -331,40 +342,40 @@
         }
 
         function renderizarUFVs() {
-            db.transaction("ufv_status").objectStore("ufv_status").getAll().onsuccess = (e) => {
+            rtdb.ref("ufv_status").objectStore("ufv_status").getAll().onsuccess = (e) => {
                 const lista = e.target.result.sort((a,b) => a.ufv.localeCompare(b.ufv));
                 document.getElementById('tabelaUFVs').innerHTML = lista.map(u => `
                     <tr>
                         <td class="px-4 py-3 font-black text-emerald-700 uppercase">${u.ufv}</td>
                         <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'digifort', this.value)" class="bg-transparent border-none font-bold text-center ${u.digifort!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
+                            <select onchange="rtdb.ref('${u.id}', 'digifort', this.value)" class="bg-transparent border-none font-bold text-center ${u.digifort!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
                                 <option value="OK" ${u.digifort==='OK'?'selected':''}>OK</option>
                                 <option value="OFFLINE" ${u.digifort!=='OK'?'selected':''}>OFFLINE</option>
                             </select>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'anydesk', this.value)" class="bg-transparent border-none font-bold text-center ${u.anydesk!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
+                            <select onchange="rtdb.ref('${u.id}', 'anydesk', this.value)" class="bg-transparent border-none font-bold text-center ${u.anydesk!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
                                 <option value="OK" ${u.anydesk==='OK'?'selected':''}>OK</option>
                                 <option value="OFFLINE" ${u.anydesk!=='OK'?'selected':''}>OFFLINE</option>
                             </select>
                         </td>
-                        <td class="px-4 py-3 text-center"><input type="number" value="${u.totalCam}" onblur="updateUFV('${u.id}', 'totalCam', this.value)" class="w-12 text-center bg-transparent outline-none"></td>
-                        <td class="px-4 py-3 text-center"><input type="number" value="${u.onCam}" onblur="updateUFV('${u.id}', 'onCam', this.value)" class="w-12 text-center bg-transparent font-bold ${u.onCam < u.totalCam ? 'text-red-500':'text-emerald-600'} outline-none"></td>
+                        <td class="px-4 py-3 text-center"><input type="number" value="${u.totalCam}" onblur="rtdb.ref('${u.id}', 'totalCam', this.value)" class="w-12 text-center bg-transparent outline-none"></td>
+                        <td class="px-4 py-3 text-center"><input type="number" value="${u.onCam}" onblur="rtdb.ref('${u.id}', 'onCam', this.value)" class="w-12 text-center bg-transparent font-bold ${u.onCam < u.totalCam ? 'text-red-500':'text-emerald-600'} outline-none"></td>
                         <td class="px-4 py-3">
-                            <select onchange="updateUFV('${u.id}', 'fibra', this.value)" class="bg-transparent border-none ${u.fibra!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
+                            <select onchange="rtdb.ref('${u.id}', 'fibra', this.value)" class="bg-transparent border-none ${u.fibra!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
                                 <option value="OK" ${u.fibra==='OK'?'selected':''}>OK</option>
                                 <option value="ROMPIDA" ${u.fibra==='ROMPIDA'?'selected':''}>ROMPIDA</option>
                                 <option value="N/A" ${u.fibra==='N/A'?'selected':''}>NÃO TEM</option>
                             </select>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'seguranca', this.value)" class="bg-transparent border-none ${u.seguranca === 'SEM NECESSIDADE' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
+                            <select onchange="rtdb.ref('${u.id}', 'seguranca', this.value)" class="bg-transparent border-none ${u.seguranca === 'SEM NECESSIDADE' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
                                 <option value="MOBILIZADA" ${u.seguranca === 'MOBILIZADA' ? 'selected' : ''}>MOBILIZADA</option>
                                 <option value="SEM NECESSIDADE" ${u.seguranca === 'SEM NECESSIDADE' ? 'selected' : ''}>SEM NECESSIDADE</option>
                             </select>
                         </td>
                         <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'pronta_resposta', this.value)" class="bg-transparent border-none ${u.pronta_resposta === 'ATIVO' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
+                            <select onchange="rtdb.ref('${u.id}', 'pronta_resposta', this.value)" class="bg-transparent border-none ${u.pronta_resposta === 'ATIVO' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
                                 <option value="ATIVO" ${u.pronta_resposta === 'ATIVO' ? 'selected' : ''}>ATIVO</option>
                                 <option value="INATIVO" ${u.pronta_resposta === 'INATIVO' ? 'selected' : ''}>INATIVO</option>
                             </select>
@@ -374,8 +385,8 @@
             };
         }
 
-        function updateUFV(id, campo, valor) {
-            const trans = db.transaction("ufv_status", "readwrite");
+        function rtdb.ref(id, campo, valor) {
+            const trans = rtdb.ref("ufv_status", "readwrite");
             const store = trans.objectStore("ufv_status");
             store.get(id).onsuccess = (e) => {
                 const d = e.target.result;
@@ -386,7 +397,7 @@
         }
 
         function popularUsinasSelect() {
-            db.transaction("ufv_status").objectStore("ufv_status").getAll().onsuccess = (e) => {
+            rtdb.ref("ufv_status").objectStore("ufv_status").getAll().onsuccess = (e) => {
                 const lista = e.target.result.sort((a,b) => a.ufv.localeCompare(b.ufv));
                 const options = '<option value="" disabled selected>Escolha a usina</option>' + lista.map(u => `<option>${u.ufv}</option>`).join('');
                 document.getElementById('usina').innerHTML = options;
@@ -403,8 +414,8 @@
             
             const f = document.getElementById('foto').files[0];
             const s = (img = null) => {
-                const trans = db.transaction("ocorrencias", "readwrite");
-                trans.objectStore("ocorrencias").add({
+                const trans = rtdb.ref("ocorrencias", "readwrite");
+                rtdb.ref("ocorrencias").add({
                     operador: document.getElementById('operador').value,
                     impacto: document.getElementById('impacto').value,
                     usina: document.getElementById('usina').value,
@@ -431,7 +442,7 @@
 
         function openModal(id) {
             idAtual = id;
-            db.transaction("ocorrencias").objectStore("ocorrencias").get(id).onsuccess = (e) => {
+            rtdb.ref("ocorrencias").objectStore("ocorrencias").get(id).onsuccess = (e) => {
                 const o = e.target.result;
                 document.getElementById('editStatus').value = o.status;
                 document.getElementById('editImpacto').value = o.impacto;
@@ -447,7 +458,7 @@
         function closeModal() { document.getElementById('editModal').classList.add('hidden'); }
 
         document.getElementById('saveEditBtn').onclick = () => {
-            const store = db.transaction("ocorrencias", "readwrite").objectStore("ocorrencias");
+            const store = rtdb.ref("ocorrencias", "readwrite").objectStore("ocorrencias");
             store.get(idAtual).onsuccess = (e) => {
                 const d = e.target.result;
                 d.status = document.getElementById('editStatus').value;
@@ -459,10 +470,10 @@
             };
         };
 
-        function excluir(id) { if(confirm("Deseja excluir?")) { db.transaction("ocorrencias", "readwrite").objectStore("ocorrencias").delete(id).onsuccess = renderizarTabela; } }
+        function excluir(id) { if(confirm("Deseja excluir?")) { rtdb.ref("ocorrencias", "readwrite").objectStore("ocorrencias").delete(id).onsuccess = renderizarTabela; } }
 
         function exportarExcel() {
-            const transaction = db.transaction("ocorrencias", "readonly");
+            const transaction = rtdb.ref("ocorrencias", "readonly");
             const store = transaction.objectStore("ocorrencias");
             const request = store.getAll();
 
@@ -495,7 +506,7 @@
         }
 
         function exportarStatusUFVExcel() {
-            const transaction = db.transaction("ufv_status", "readonly");
+            const transaction = rtdb.ref("ufv_status", "readonly");
             const store = transaction.objectStore("ufv_status");
             const request = store.getAll();
 
@@ -530,5 +541,4 @@
     </script>
 </body>
 </html>
-
 
