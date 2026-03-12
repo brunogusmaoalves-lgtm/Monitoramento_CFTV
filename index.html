@@ -235,7 +235,19 @@
             "São Francisco de Itabapoana", "São Gabriel do Oeste 1", "São Joaquim da Barra 1", 
             "São Joaquim da Barra 2", "Serra do Mel", "Serra do Mel 2", "Vassouras", "Naque"
         ];
+const firebaseConfig = {
+  apiKey: "AIzaSyAcQ_HvSuS_ti3ITdeay1DoWXLB4D-yO4s",
+  authDomain: "cftv-ede96.firebaseapp.com",
+  databaseURL: "https://cftv-ede96-default-rtdb.firebaseio.com",
+  projectId: "cftv-ede96",
+  storageBucket: "cftv-ede96.firebasestorage.app",
+  messagingSenderId: "749431389746",
+  appId: "1:749431389746:web:f2451285f5b2066668462b"
+};
 
+// Inicializa o Firebase (no formato compatível com o script anterior)
+firebase.initializeApp(firebaseConfig);
+const rtdb = firebase.database();
         const request = indexedDB.open("MonitoramentoCFTV_V1", 1);
         request.onupgradeneeded = (e) => {
             db = e.target.result;
@@ -531,3 +543,4 @@
     </script>
 </body>
 </html>
+
