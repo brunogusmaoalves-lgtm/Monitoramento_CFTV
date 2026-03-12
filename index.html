@@ -217,6 +217,37 @@
     </div>
 
     <script>
+
+const SCRIPT_URL = "COLE_AQUI_O_URL_QUE_VOCE_COPIOU";
+
+// Função para enviar ocorrência
+document.getElementById('formRegistro').onsubmit = async function(e) {
+    e.preventDefault();
+    const dados = {
+        action: "addOcorrencia",
+        operador: document.getElementById('operador').value,
+        usina: document.getElementById('usina').value,
+        tipo: document.getElementById('tipo').value,
+        local: document.getElementById('local').value,
+        desc: document.getElementById('desc').value
+    };
+
+    await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(dados)
+    });
+    
+    alert("Registado na Planilha!");
+    this.reset();
+};
+
+// Função para ler as usinas da planilha ao abrir o site
+async function carregarUsinasDaPlanilha() {
+    const response = await fetch(SCRIPT_URL);
+    const dados = await response.json();
+    // Aqui você usa os dados para montar a sua tabela e o seu select
+    console.log("Dados da Planilha:", dados);
+}
         const CREDENCIAIS = { u: "admin", p: "usina2026", n: "Gestor CFTV" };
         let db;
         let idAtual = null;
@@ -531,3 +562,4 @@
     </script>
 </body>
 </html>
+
