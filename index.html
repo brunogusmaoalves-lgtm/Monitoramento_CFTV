@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoramento CFTV - IVI Energia</title>
     <script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @media print { .no-print { display: none; } }
@@ -248,6 +250,23 @@ const firebaseConfig = {
 // Inicializa o Firebase (no formato compatível com o script anterior)
 firebase.initializeApp(firebaseConfig);
 const rtdb = firebase.database();
+		function atualizarStatusUFV(ufvNome, campo, valor) {
+    // Em vez de salvar no navegador, salva na nuvem
+    rtdb.ref('status_ufv/' + ufvNome).update({
+        [campo]: valor,
+        ultimaAtualizacao: new Date().toISOString()
+    }).then(() => {
+        console.log("Sincronizado com a nuvem!");
+    }).catch(err => {
+        alert("Erro ao subir dados: " + err.message);
+    });
+}
+		rtdb.ref('status_ufv').on('value', (snapshot) => {
+    const dados = snapshot.val();
+    if (dados) {
+        renderizarTabelaStatus(dados); // Chama sua função de desenho da tabela
+    }
+});
         const request = indexedDB.open("MonitoramentoCFTV_V1", 1);
         request.onupgradeneeded = (e) => {
             db = e.target.result;
@@ -388,23 +407,48 @@ const rtdb = firebase.database();
         }
 
         function updateUFV(id, campo, valor) {
-            const trans = db.transaction("ufv_status", "readwrite");
-            const store = trans.objectStore("ufv_status");
-            store.get(id).onsuccess = (e) => {
-                const d = e.target.result;
-                d[campo] = isNaN(valor) ? valor : parseInt(valor);
-                store.put(d);
-                trans.oncomplete = () => { renderizarUFVs(); popularUsinasSelect(); };
-            };
+    // 1. Tratamento do valor (mantendo sua lógica de converter para número se necessário)
+    const valorTratado = isNaN(valor) ? valor : parseInt(valor);
+
+    // 2. Atualização direta na nuvem
+    // rtdb é a sua variável firebase.database()
+    rtdb.ref('ufv_status/' + id).update({
+        [campo]: valorTratado
+    })
+    .then(() => {
+        console.log("Sincronizado com a nuvem!");
+        // NOTA: Se você estiver usando rtdb.ref('ufv_status').on('value', ...),
+        // as funções renderizarUFVs() e popularUsinasSelect() serão chamadas 
+        // automaticamente pelo "ouvinte" de tempo real, não precisa delas aqui.
+    })
+    .catch((erro) => {
+        console.error("Erro ao atualizar no Firebase:", erro);
+    });
+}
         }
 
         function popularUsinasSelect() {
-            db.transaction("ufv_status").objectStore("ufv_status").getAll().onsuccess = (e) => {
-                const lista = e.target.result.sort((a,b) => a.ufv.localeCompare(b.ufv));
-                const options = '<option value="" disabled selected>Escolha a usina</option>' + lista.map(u => `<option>${u.ufv}</option>`).join('');
-                document.getElementById('usina').innerHTML = options;
-                document.getElementById('editUsina').innerHTML = options;
-            };
+    // Acessamos a pasta 'ufv_status' na nuvem
+    rtdb.ref('ufv_status').on('value', (snapshot) => {
+        const dados = snapshot.val();
+        
+        if (!dados) return;
+
+        // Convertemos o objeto do Firebase em uma lista e ordenamos por nome
+        const lista = Object.values(dados).sort((a, b) => a.ufv.localeCompare(b.ufv));
+
+        // Criamos o HTML das opções
+        const options = '<option value="" disabled selected>Escolha a usina</option>' + 
+                        lista.map(u => `<option value="${u.ufv}">${u.ufv}</option>`).join('');
+
+        // Atualizamos os elementos no seu HTML
+        const selectUsina = document.getElementById('usina');
+        const selectEditUsina = document.getElementById('editUsina');
+
+        if (selectUsina) selectUsina.innerHTML = options;
+        if (selectEditUsina) selectEditUsina.innerHTML = options;
+    });
+}
         }
 
         // FUNÇÃO ONSUBMIT ATUALIZADA COM DATA MANUAL
@@ -416,20 +460,31 @@ const rtdb = firebase.database();
             
             const f = document.getElementById('foto').files[0];
             const s = (img = null) => {
-                const trans = db.transaction("ocorrencias", "readwrite");
-                trans.objectStore("ocorrencias").add({
-                    operador: document.getElementById('operador').value,
-                    impacto: document.getElementById('impacto').value,
-                    usina: document.getElementById('usina').value,
-                    tipo: document.getElementById('tipo').value,
-                    local: document.getElementById('local').value,
-                    desc: document.getElementById('desc').value,
-                    foto: img, 
-                    status: "Aberto", 
-                    obs: "", 
-                    dataReg: "", 
-                    data: dataFinal // Usa a data manual ou atual
-                });
+                // 1. Criamos uma referência na "pasta" ocorrências e geramos um ID novo
+const novaOcorrenciaRef = rtdb.ref("ocorrencias").push();
+
+// 2. Enviamos os dados para esse novo ID na nuvem
+novaOcorrenciaRef.set({
+    id: novaOcorrenciaRef.key, // Guarda o ID gerado pelo Firebase dentro do objeto
+    operador: document.getElementById('operador').value,
+    impacto: document.getElementById('impacto').value,
+    usina: document.getElementById('usina').value,
+    tipo: document.getElementById('tipo').value,
+    local: document.getElementById('local').value,
+    desc: document.getElementById('desc').value,
+    foto: img, // Certifique-se que 'img' seja uma string Base64
+    status: "Aberto",
+    obs: "",
+    dataReg: new Date().toLocaleString(), // Opcional: registrar quando foi salvo
+    data: dataFinal // Sua data tratada (manual ou atual)
+})
+.then(() => {
+    console.log("Ocorrência salva na nuvem com sucesso!");
+    document.getElementById('formRegistro').reset(); // Limpa o formulário
+})
+.catch((erro) => {
+    alert("Erro ao salvar no Firebase: " + erro.message);
+});
                 trans.oncomplete = () => { 
                     document.getElementById('formRegistro').reset(); 
                     renderizarTabela(); 
@@ -543,4 +598,5 @@ const rtdb = firebase.database();
     </script>
 </body>
 </html>
+
 
