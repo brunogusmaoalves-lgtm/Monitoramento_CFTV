@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoramento CFTV - IVI Energia</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @media print { .no-print { display: none; } }
@@ -217,319 +219,144 @@
     </div>
 
     <script>
-        const CREDENCIAIS = { u: "admin", p: "usina2026", n: "Gestor CFTV" };
-        let db;
-        let idAtual = null;
+        // CONFIGURAÇÃO FIREBASE
+const firebaseConfig = {
+    apiKey: "AIzaSyAcQ_HvSuS_ti3ITdeay1DoWXLB4D-yO4s",
+    authDomain: "cftv-ede96.firebaseapp.com",
+    databaseURL: "https://cftv-ede96-default-rtdb.firebaseio.com",
+    projectId: "cftv-ede96",
+    storageBucket: "cftv-ede96.firebasestorage.app",
+    messagingSenderId: "749431389746",
+    appId: "1:749431389746:web:f2451285f5b2066668462b"
+};
 
-        const NOMES_USINAS = [
-            "Água Clara", "Almino Afonso", "Aloândia 1", "Aparecida do Taboado", "Araruama 1", 
-            "Araruama 2", "Araruama 3", "Bonópolis", "Borda da Mata", "Botelhos 2", 
-            "Brejinho", "Buriti Alegre", "Cachoeira Alta 1", "Cambuí", "Campo Grande", 
-            "Corumbaíba 2", "Corumbaíba 3", "Frei Inocêncio", "Grossos 1", "Guará", 
-            "Iaciara 1", "Iaciara 2", "Itaguaí 4", "Itaguara", "Itarumã 1", 
-            "Itarumã 2", "Lambari", "Major Sales", "Mateus Leme 1", "Mateus Leme 2", 
-            "Monte Sião", "Mossoró 2", "Nova Andradina", "Nova Aurora 2", "Nova Lacerda", 
-            "Panamá de Goiás 1", "Panamá de Goiás 2", "Paranaiguara", "Paranatinga", "Paratinga", 
-            "Paty de Alferes", "Pedra Santa", "Pongaí", "Resende", "Rio do Antônio 1", 
-            "Rio do Antônio 2", "Rio Pardo de Minas", "Rota do Sol 1", "Santo Antônio do Descoberto", 
-            "São Francisco de Itabapoana", "São Gabriel do Oeste 1", "São Joaquim da Barra 1", 
-            "São Joaquim da Barra 2", "Serra do Mel", "Serra do Mel 2", "Vassouras", "Naque"
-        ];
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-        const request = indexedDB.open("MonitoramentoCFTV_V1", 1);
-        request.onupgradeneeded = (e) => {
-            db = e.target.result;
-            db.createObjectStore("ocorrencias", { keyPath: "id", autoIncrement: true });
-            db.createObjectStore("ufv_status", { keyPath: "id" });
-        };
-        request.onsuccess = (e) => {
-            db = e.target.result;
-            verificarEPopularUFVs();
-            renderizarTabela();
-            if(localStorage.getItem('solar_session')) mostrarApp();
-        };
+// LISTA DAS 57 USINAS (EXTRAÍDA DO SEU ORIGINAL)
+const NOMES_USINAS = [
+    "Água Clara", "Almino Afonso", "Aloândia 1", "Aparecida do Taboado", "Araruama 1", 
+    "Araruama 2", "Araruama 3", "Bonópolis", "Borda da Mata", "Botelhos 2", 
+    "Brejinho", "Buriti Alegre", "Cachoeira Alta 1", "Cambuí", "Campo Grande", 
+    "Corumbaíba 2", "Corumbaíba 3", "Frei Inocêncio", "Grossos 1", "Guará", 
+    "Iaciara 1", "Iaciara 2", "Itaguaí 4", "Itaguara", "Itarumã 1", 
+    "Itarumã 2", "Lambari", "Major Sales", "Mateus Leme 1", "Mateus Leme 2", 
+    "Monte Sião", "Mossoró 2", "Nova Andradina", "Nova Aurora 2", "Nova Lacerda", 
+    "Panamá de Goiás 1", "Panamá de Goiás 2", "Paranaiguara", "Paranatinga", "Paratinga", 
+    "Paty de Alferes", "Pedra Santa", "Pongaí", "Resende", "Rio do Antônio 1", 
+    "Rio do Antônio 2", "Rio Pardo de Minas", "Rota do Sol 1", "Santo Antônio do Descoberto", 
+    "São Francisco de Itabapoana", "São Gabriel do Oeste 1", "São Joaquim da Barra 1", 
+    "São Joaquim da Barra 2", "Serra do Mel", "Serra do Mel 2", "Vassouras", "Naque"
+];
 
-        function verificarEPopularUFVs() {
-            const trans = db.transaction("ufv_status", "readwrite");
-            const store = trans.objectStore("ufv_status");
-            store.count().onsuccess = (e) => {
-                if (e.target.result === 0) {
-                    NOMES_USINAS.forEach(nome => {
-                        store.add({ 
-                            id: nome.toLowerCase().replace(/\s/g, '_'), 
-                            ufv: nome, digifort: "OK", anydesk: "OK", totalCam: 8, onCam: 8, fibra: "OK",
-                            seguranca: "SEM NECESSIDADE", pronta_resposta: "ATIVO"
-                        });
-                    });
-                }
-                setTimeout(() => { renderizarUFVs(); popularUsinasSelect(); }, 100);
-            };
-        }
+window.dadosUFVs = [];
 
-        function autenticar() {
-            const u = document.getElementById('userInput').value;
-            const p = document.getElementById('passInput').value;
-            if(u === CREDENCIAIS.u && p === CREDENCIAIS.p) {
-                localStorage.setItem('solar_session', CREDENCIAIS.n);
-                mostrarApp();
-            } else { alert("Acesso Negado."); }
-        }
+// ESCUTA O BANCO DE DADOS
+db.ref('ufv_status').on('value', (snap) => {
+    console.log("Dados recebidos do Firebase...");
+    window.dadosUFVs = [];
+    
+    if (snap.exists()) {
+        snap.forEach(child => {
+            window.dadosUFVs.push({ id: child.key, ...child.val() });
+        });
+        console.log(window.dadosUFVs.length + " usinas carregadas.");
+        renderizarStatus();
+        popularSelectUsinas();
+    } else {
+        console.log("Banco vazio. Inicializando usinas...");
+        inicializarUsinasNoBanco();
+    }
+}, (error) => {
+    console.error("Erro na conexão:", error);
+});
 
-        function mostrarApp() {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('mainApp').classList.remove('hidden');
-            document.getElementById('displayUser').innerText = localStorage.getItem('solar_session');
-        }
+// FUNÇÃO PARA CRIAR AS USINAS CASO NÃO EXISTAM
+function inicializarUsinasNoBanco() {
+    NOMES_USINAS.forEach(nome => {
+        // Gera um ID sem espaços ou acentos para o banco
+        const id = nome.normalize('NFD').replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+        db.ref('ufv_status/' + id).set({
+            ufv: nome,
+            digifort: "OK",
+            anydesk: "OK",
+            totalCam: 8,
+            onCam: 8,
+            fibra: "OK",
+            seguranca: "SEM NECESSIDADE",
+            pronta_resposta: "ATIVO"
+        });
+    });
+}
 
-        function logout() {
-            localStorage.removeItem('solar_session');
-            document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('loginPage').style.display = 'flex';
-        }
+// PREENCHE O CAMPO DE ESCOLHA (SELECT)
+function popularSelectUsinas() {
+    const select = document.getElementById('usina');
+    if(!select) return;
+    
+    const listaOrdenada = [...window.dadosUFVs].sort((a,b) => a.ufv.localeCompare(b.ufv));
+    
+    let html = '<option value="" disabled selected>Escolha a usina</option>';
+    listaOrdenada.forEach(u => {
+        html += `<option value="${u.ufv}">${u.ufv}</option>`;
+    });
+    select.innerHTML = html;
+}
 
-        function switchTab(tab) {
-            document.getElementById('contentOcorrencias').classList.toggle('hidden', tab !== 'ocorrencias');
-            document.getElementById('contentStatus').classList.toggle('hidden', tab !== 'status');
-            document.getElementById('tabBtnOcorrencias').classList.toggle('tab-active', tab === 'ocorrencias');
-            document.getElementById('tabBtnStatus').classList.toggle('tab-active', tab === 'status');
-        }
+// RENDERIZA A TABELA DE STATUS
+function renderizarStatus() {
+    const tbody = document.getElementById('tabelaUFVs');
+    if(!tbody) return;
 
-        function renderizarTabela() {
-            if(!db) return;
-            const q = document.getElementById('search').value.toLowerCase();
-            db.transaction("ocorrencias").objectStore("ocorrencias").getAll().onsuccess = (e) => {
-                const lista = e.target.result.filter(o => 
-                    o.usina.toLowerCase().includes(q) || 
-                    o.status.toLowerCase().includes(q) || 
-                    o.operador.toLowerCase().includes(q) || 
-                    (o.data && o.data.includes(q))
-                );
-                document.getElementById('tabelaDados').innerHTML = lista.reverse().map(o => `
-                    <tr class="hover:bg-slate-50 transition border-b">
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 rounded text-[9px] font-black uppercase ${o.status === 'Aberto' ? 'bg-red-100 text-red-600' : o.status === 'Investigando' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}">${o.status}</span>
-                            <div class="mt-1 text-[8px] font-bold text-slate-400 uppercase">Impacto: ${o.impacto}</div>
-                        </td>
-                        <td class="px-6 py-4 text-[10px]">
-                            <div class="text-emerald-600 font-bold uppercase">${o.usina}</div>
-                            <div class="font-black text-slate-700 uppercase">${o.operador}</div>
-                            <div class="text-slate-400 font-mono">${new Date(o.data).toLocaleString('pt-BR')}</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="font-bold text-slate-800">${o.tipo}</div>
-                            <div class="text-[10px] text-slate-500 uppercase">${o.local}</div>
-                            ${o.obs ? `<div class="text-[9px] mt-2 text-emerald-700 bg-emerald-50 p-2 border-l-4 border-emerald-500 rounded"><b>SOLUÇÃO:</b> ${o.obs}${o.dataReg ? `<br><b class='text-emerald-900'>FINALIZADO EM: ${o.dataReg.split('-').reverse().join('/')}</b>` : ''}</div>` : ''}
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex gap-3 justify-center no-print">
-                                <button onclick="openModal(${o.id})" class="text-slate-300 hover:text-emerald-600 transition"><i class="fas fa-edit"></i></button>
-                                <button onclick="excluir(${o.id})" class="text-slate-200 hover:text-red-500 transition"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-            };
-        }
+    const lista = [...window.dadosUFVs].sort((a,b) => a.ufv.localeCompare(b.ufv));
+    tbody.innerHTML = lista.map(u => `
+        <tr class="hover:bg-slate-50 border-b">
+            <td class="px-4 py-3 font-black text-emerald-700 uppercase text-[10px]">${u.ufv}</td>
+            <td class="text-center">
+                <select onchange="atualizarUfv('${u.id}', 'pronta_resposta', this.value)" class="bg-transparent border-none text-[10px] font-bold ${u.pronta_resposta === 'ATIVO' ? 'text-emerald-600' : 'text-red-500'}">
+                    <option value="ATIVO" ${u.pronta_resposta === 'ATIVO' ? 'selected' : ''}>ATIVO</option>
+                    <option value="INATIVO" ${u.pronta_resposta === 'INATIVO' ? 'selected' : ''}>INATIVO</option>
+                </select>
+            </td>
+            <td class="text-center">
+                <select onchange="atualizarUfv('${u.id}', 'fibra', this.value)" class="bg-transparent border-none text-[10px] ${u.fibra === 'OK' ? 'text-emerald-600' : 'text-red-500'}">
+                    <option value="OK" ${u.fibra === 'OK' ? 'selected' : ''}>OK</option>
+                    <option value="ROMPIDA" ${u.fibra !== 'OK' ? 'selected' : ''}>ROMPIDA</option>
+                </select>
+            </td>
+            <td class="text-center"><input type="number" value="${u.totalCam}" onblur="atualizarUfv('${u.id}', 'totalCam', this.value)" class="w-10 text-center bg-transparent text-[10px]"></td>
+            <td class="text-center"><input type="number" value="${u.onCam}" onblur="atualizarUfv('${u.id}', 'onCam', this.value)" class="w-10 text-center bg-transparent font-bold text-[10px] ${u.onCam < u.totalCam ? 'text-red-500' : 'text-emerald-600'}"></td>
+            <td><input type="text" value="${u.anydesk}" onblur="atualizarUfv('${u.id}', 'anydesk', this.value)" class="w-full bg-transparent text-center text-[10px]"></td>
+        </tr>
+    `).join('');
+}
 
-        function renderizarUFVs() {
-            db.transaction("ufv_status").objectStore("ufv_status").getAll().onsuccess = (e) => {
-                const lista = e.target.result.sort((a,b) => a.ufv.localeCompare(b.ufv));
-                document.getElementById('tabelaUFVs').innerHTML = lista.map(u => `
-                    <tr>
-                        <td class="px-4 py-3 font-black text-emerald-700 uppercase">${u.ufv}</td>
-                        <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'digifort', this.value)" class="bg-transparent border-none font-bold text-center ${u.digifort!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
-                                <option value="OK" ${u.digifort==='OK'?'selected':''}>OK</option>
-                                <option value="OFFLINE" ${u.digifort!=='OK'?'selected':''}>OFFLINE</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'anydesk', this.value)" class="bg-transparent border-none font-bold text-center ${u.anydesk!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
-                                <option value="OK" ${u.anydesk==='OK'?'selected':''}>OK</option>
-                                <option value="OFFLINE" ${u.anydesk!=='OK'?'selected':''}>OFFLINE</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-3 text-center"><input type="number" value="${u.totalCam}" onblur="updateUFV('${u.id}', 'totalCam', this.value)" class="w-12 text-center bg-transparent outline-none"></td>
-                        <td class="px-4 py-3 text-center"><input type="number" value="${u.onCam}" onblur="updateUFV('${u.id}', 'onCam', this.value)" class="w-12 text-center bg-transparent font-bold ${u.onCam < u.totalCam ? 'text-red-500':'text-emerald-600'} outline-none"></td>
-                        <td class="px-4 py-3">
-                            <select onchange="updateUFV('${u.id}', 'fibra', this.value)" class="bg-transparent border-none ${u.fibra!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
-                                <option value="OK" ${u.fibra==='OK'?'selected':''}>OK</option>
-                                <option value="ROMPIDA" ${u.fibra==='ROMPIDA'?'selected':''}>ROMPIDA</option>
-                                <option value="N/A" ${u.fibra==='N/A'?'selected':''}>NÃO TEM</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'seguranca', this.value)" class="bg-transparent border-none ${u.seguranca === 'SEM NECESSIDADE' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
-                                <option value="MOBILIZADA" ${u.seguranca === 'MOBILIZADA' ? 'selected' : ''}>MOBILIZADA</option>
-                                <option value="SEM NECESSIDADE" ${u.seguranca === 'SEM NECESSIDADE' ? 'selected' : ''}>SEM NECESSIDADE</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'pronta_resposta', this.value)" class="bg-transparent border-none ${u.pronta_resposta === 'ATIVO' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
-                                <option value="ATIVO" ${u.pronta_resposta === 'ATIVO' ? 'selected' : ''}>ATIVO</option>
-                                <option value="INATIVO" ${u.pronta_resposta === 'INATIVO' ? 'selected' : ''}>INATIVO</option>
-                            </select>
-                        </td>
-                    </tr>
-                `).join('');
-            };
-        }
+function atualizarUfv(id, campo, valor) {
+    const v = isNaN(valor) || valor === "" ? valor : parseInt(valor);
+    db.ref('ufv_status/' + id).update({ [campo]: v });
+}
 
-        function updateUFV(id, campo, valor) {
-            const trans = db.transaction("ufv_status", "readwrite");
-            const store = trans.objectStore("ufv_status");
-            store.get(id).onsuccess = (e) => {
-                const d = e.target.result;
-                d[campo] = isNaN(valor) ? valor : parseInt(valor);
-                store.put(d);
-                trans.oncomplete = () => { renderizarUFVs(); popularUsinasSelect(); };
-            };
-        }
+// LOGIN SIMPLES
+function autenticar() {
+    if(document.getElementById('passInput').value === "usina2026") {
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('mainApp').classList.remove('hidden');
+        localStorage.setItem('cftv_auth', 'true');
+    } else { alert("Senha incorreta"); }
+}
 
-        function popularUsinasSelect() {
-            db.transaction("ufv_status").objectStore("ufv_status").getAll().onsuccess = (e) => {
-                const lista = e.target.result.sort((a,b) => a.ufv.localeCompare(b.ufv));
-                const options = '<option value="" disabled selected>Escolha a usina</option>' + lista.map(u => `<option>${u.ufv}</option>`).join('');
-                document.getElementById('usina').innerHTML = options;
-                document.getElementById('editUsina').innerHTML = options;
-            };
-        }
+if(localStorage.getItem('cftv_auth') === 'true') {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').classList.remove('hidden');
+}
 
-        // FUNÇÃO ONSUBMIT ATUALIZADA COM DATA MANUAL
-        document.getElementById('formRegistro').onsubmit = (e) => {
-            e.preventDefault();
-            
-            const dataManual = document.getElementById('dataEventoManual').value;
-            const dataFinal = dataManual ? new Date(dataManual).toISOString() : new Date().toISOString();
-            
-            const f = document.getElementById('foto').files[0];
-            const s = (img = null) => {
-                const trans = db.transaction("ocorrencias", "readwrite");
-                trans.objectStore("ocorrencias").add({
-                    operador: document.getElementById('operador').value,
-                    impacto: document.getElementById('impacto').value,
-                    usina: document.getElementById('usina').value,
-                    tipo: document.getElementById('tipo').value,
-                    local: document.getElementById('local').value,
-                    desc: document.getElementById('desc').value,
-                    foto: img, 
-                    status: "Aberto", 
-                    obs: "", 
-                    dataReg: "", 
-                    data: dataFinal // Usa a data manual ou atual
-                });
-                trans.oncomplete = () => { 
-                    document.getElementById('formRegistro').reset(); 
-                    renderizarTabela(); 
-                };
-            };
-            if(f) { 
-                const r = new FileReader(); 
-                r.onload = () => s(r.result); 
-                r.readAsDataURL(f); 
-            } else s();
-        };
-
-        function openModal(id) {
-            idAtual = id;
-            db.transaction("ocorrencias").objectStore("ocorrencias").get(id).onsuccess = (e) => {
-                const o = e.target.result;
-                document.getElementById('editStatus').value = o.status;
-                document.getElementById('editImpacto').value = o.impacto;
-                document.getElementById('editUsina').value = o.usina;
-                document.getElementById('editObs').value = o.obs || "";
-                document.getElementById('editDataReg').value = o.dataReg || "";
-                const c = document.getElementById('editFotoContainer');
-                if(o.foto) { document.getElementById('editFotoView').src = o.foto; c.classList.remove('hidden'); } else c.classList.add('hidden');
-                document.getElementById('editModal').classList.remove('hidden');
-            };
-        }
-
-        function closeModal() { document.getElementById('editModal').classList.add('hidden'); }
-
-        document.getElementById('saveEditBtn').onclick = () => {
-            const store = db.transaction("ocorrencias", "readwrite").objectStore("ocorrencias");
-            store.get(idAtual).onsuccess = (e) => {
-                const d = e.target.result;
-                d.status = document.getElementById('editStatus').value;
-                d.impacto = document.getElementById('editImpacto').value;
-                d.usina = document.getElementById('editUsina').value;
-                d.obs = document.getElementById('editObs').value;
-                d.dataReg = document.getElementById('editDataReg').value;
-                store.put(d); closeModal(); renderizarTabela();
-            };
-        };
-
-        function excluir(id) { if(confirm("Deseja excluir?")) { db.transaction("ocorrencias", "readwrite").objectStore("ocorrencias").delete(id).onsuccess = renderizarTabela; } }
-
-        function exportarExcel() {
-            const transaction = db.transaction("ocorrencias", "readonly");
-            const store = transaction.objectStore("ocorrencias");
-            const request = store.getAll();
-
-            request.onsuccess = () => {
-                const dados = request.result;
-                if (dados.length === 0) { alert("Não há dados para exportar."); return; }
-
-                let csv = "Data Início;Operador;Usina;Tipo;Status;Impacto;Solução;Data Final\n";
-                dados.forEach(o => {
-                    const linha = [
-                        new Date(o.data).toLocaleString('pt-BR'),
-                        o.operador || "",
-                        o.usina || "",
-                        o.tipo || "",
-                        o.status || "",
-                        o.impacto || "",
-                        (o.obs || "").replace(/(\n|;)/gm, " "),
-                        o.dataReg || ""
-                    ];
-                    csv += linha.join(";") + "\n";
-                });
-
-                const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.setAttribute("href", url);
-                link.setAttribute("download", `Relatorio_Ocorrencias_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
-                link.click();
-            };
-        }
-
-        function exportarStatusUFVExcel() {
-            const transaction = db.transaction("ufv_status", "readonly");
-            const store = transaction.objectStore("ufv_status");
-            const request = store.getAll();
-
-            request.onsuccess = () => {
-                const dados = request.result;
-                if (dados.length === 0) { alert("Não há dados de status."); return; }
-
-                let csv = "UFV;Segurança Patrimonial;Pronta Resposta;Fibra;Digifort;Anydesk;Total Cam;Cam ON\n";
-                dados.sort((a, b) => a.ufv.localeCompare(b.ufv));
-                dados.forEach(u => {
-                    const linha = [
-                        u.ufv || "N/A",
-                        u.seguranca || "SEM NECESSIDADE",
-                        u.pronta_resposta || "ATIVO",
-                        u.fibra || "OK",
-                        u.digifort || "OK",
-                        u.anydesk || "OK",
-                        u.totalCam || 0,
-                        u.onCam || 0
-                    ];
-                    csv += linha.join(";") + "\n";
-                });
-
-                const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.setAttribute("href", url);
-                link.setAttribute("download", `Status_UFVs_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
-                link.click();
-            };
-        }
+function switchTab(t) {
+    document.getElementById('contentOcorrencias').classList.toggle('hidden', t !== 'ocorrencias');
+    document.getElementById('contentStatus').classList.toggle('hidden', t !== 'status');
+    document.getElementById('tabBtnOcorrencias').classList.toggle('tab-active', t === 'ocorrencias');
+    document.getElementById('tabBtnStatus').classList.toggle('tab-active', t === 'status');
+}
     </script>
 </body>
 </html>
-
 
