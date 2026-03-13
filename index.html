@@ -197,11 +197,10 @@
                 <textarea id="editObs" rows="4" placeholder="Descreva o que foi feito para resolver..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm"></textarea>
             </div>
 
-            
-               <div class="space-y-4">
-                <div id="editFotoContainer" class="hidden flex flex-col items-center p-3 bg-slate-50 rounded-xl border border-dashed">
-                    <img id="editFotoView" src="" onclick="window.open(this.src)" class="h-32 w-auto object-contain rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform">
-
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase">Evidência (Link da Imagem/Anexo)</label>
+                <input type="text" id="editImg" placeholder="Link da imagem ou print" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm">
+            </div>
 
             <div class="flex gap-3 pt-2">
                 <button onclick="closeModal()" class="flex-1 bg-slate-100 text-slate-600 font-black py-4 rounded-xl uppercase text-xs">Cancelar</button>
