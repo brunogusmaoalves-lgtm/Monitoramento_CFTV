@@ -79,6 +79,7 @@
                                 <select id="impacto" class="w-full mt-1 p-2 bg-slate-50 border rounded-lg text-xs outline-none font-bold">
                                     <option>⚪ Nenhum</option><option>🟠 Parcial</option><option>🔴 Total</option>
                                 </select>
+
                             </div>
                         </div>
                         <div>
@@ -168,53 +169,47 @@
         </main>
     </div>
 
-    <div id="editModal" class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm no-print">
-        <div class="bg-white p-8 rounded-2xl w-full max-w-lg shadow-2xl overflow-y-auto max-h-[95vh]">
-            <div class="flex justify-between items-center mb-6 border-b pb-4">
-                <h3 class="font-black text-slate-800 uppercase text-sm tracking-tighter">Atualizar Registro</h3>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
+    <div id="editModal" class="fixed inset-0 bg-slate-900/50 hidden z-[200] flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-8">
+        <div class="flex justify-between items-center mb-6 border-b pb-4">
+            <h3 class="text-xl font-black text-slate-800 uppercase tracking-tighter">Regularização do Evento</h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        
+        <div class="space-y-5">
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase">Data/Hora da Regularização</label>
+                <input type="datetime-local" id="editDataReg" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm">
             </div>
-            <div class="space-y-4">
-                <div id="editFotoContainer" class="hidden flex flex-col items-center p-3 bg-slate-50 rounded-xl border border-dashed">
-                    <img id="editFotoView" src="" onclick="window.open(this.src)" class="h-32 w-auto object-contain rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</label>
+
+            <div>
+                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</label>
                         <select id="editStatus" class="w-full mt-1 p-2 border rounded-lg bg-slate-50 text-xs font-bold outline-none focus:border-emerald-500">
                             <option value="Aberto">🔴 Aberto</option>
                             <option value="Investigando">🔵 Investigando</option>
                             <option value="Finalizado">🟢 Finalizado</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Geração</label>
-                        <select id="editImpacto" class="w-full mt-1 p-2 border rounded-lg bg-slate-50 text-xs font-bold outline-none">
-                            <option>⚪ Nenhum</option><option>🟠 Parcial</option><option>🔴 Total</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Usina</label>
-                        <select id="editUsina" class="w-full mt-1 p-2 border rounded-lg bg-slate-50 text-xs outline-none focus:border-emerald-500"></select>
-                    </div>
-                    <div>
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Data Finalização</label>
-                        <input type="date" id="editDataReg" class="w-full mt-1 p-2 border rounded-lg bg-slate-50 text-xs outline-none focus:border-emerald-500">
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Resumo da Solução</label>
-                    <textarea id="editObs" rows="3" class="w-full mt-1 p-3 border rounded-lg bg-emerald-50 text-xs outline-none font-medium focus:ring-2 focus:ring-emerald-500" placeholder="Descreva as medidas tomadas..."></textarea>
-                </div>
-                <div class="flex gap-3 pt-4 border-t">
-                    <button onclick="closeModal()" class="flex-1 font-bold text-slate-400 text-xs uppercase tracking-widest">Cancelar</button>
-                    <button id="saveEditBtn" class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg hover:bg-emerald-600">Salvar Alterações</button>
-                </div>
+
+                </select>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase">Resumo da Solução Técnica</label>
+                <textarea id="editObs" rows="4" placeholder="Descreva o que foi feito para resolver..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm"></textarea>
+            </div>
+
+            
+               <div class="space-y-4">
+                <div id="editFotoContainer" class="hidden flex flex-col items-center p-3 bg-slate-50 rounded-xl border border-dashed">
+                    <img id="editFotoView" src="" onclick="window.open(this.src)" class="h-32 w-auto object-contain rounded-lg shadow-md cursor-pointer hover:scale-105 transition-transform">
+
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeModal()" class="flex-1 bg-slate-100 text-slate-600 font-black py-4 rounded-xl uppercase text-xs">Cancelar</button>
+                <button id="saveEditBtn" class="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-xl shadow-lg uppercase text-xs tracking-widest">Salvar Regularização</button>
             </div>
         </div>
     </div>
+</div>
 
     <script>
 
@@ -345,7 +340,7 @@ function renderizarTabela(lista = listaOcorrencias) {
                 </td>
                 <td class="px-6 py-4 text-center">
                     <div class="flex gap-3 justify-center no-print text-[10px] text-slate-400">
-                        Nuven Ativa <i class="fas fa-cloud text-emerald-500"></i>
+                        
                     </div>
                 </td>
             </tr>
@@ -400,7 +395,47 @@ function renderizarUFVs(lista = listaUFVs) {
         </tr>
     `).join('');
 }
+function renderizarTabela() {
+    const tbody = document.getElementById('tabelaDados');
+    const busca = document.getElementById('search').value.toLowerCase();
+    const listaExibicao = [...listaOcorrencias].reverse();
 
+    tbody.innerHTML = listaExibicao.filter(o => 
+        (o[2] && o[2].toLowerCase().includes(busca)) || 
+        (o[1] && o[1].toLowerCase().includes(busca))
+    ).map(o => {
+        const indexReal = listaOcorrencias.indexOf(o);
+        const status = o[7] || "Aberto";
+        
+        return `
+            <tr class="hover:bg-slate-50 transition border-b">
+                <td class="px-6 py-4 text-[10px]">
+                    <span class="px-2 py-1 rounded font-black uppercase ${status==='Aberto'?'bg-red-100 text-red-600':status==='Investigando'?'bg-blue-100 text-blue-600':'bg-emerald-100 text-emerald-600'}">${status}</span>
+                    <div class="mt-1 text-slate-400 uppercase">Impacto: ${o[6]||'-'}</div>
+                </td>
+                <td class="px-6 py-4 text-[10px]">
+                    <div class="text-emerald-600 font-bold uppercase">${o[2]}</div>
+                    <div class="font-black text-slate-700 uppercase">${o[1]}</div>
+                    <div class="text-slate-400 font-mono">${new Date(o[0]).toLocaleString('pt-BR')}</div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="font-bold text-slate-800 text-[11px]">${o[3]}</div>
+                    <div class="text-[10px] text-slate-500 italic">${o[5]}</div>
+                </td>
+                <td class="px-6 py-4 text-center">
+                    <div class="flex flex-col gap-2">
+                        <button onclick="abrirEdicao(${indexReal})" class="text-blue-600 hover:text-blue-800 font-black text-[10px] uppercase">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button onclick="deletarOcorrencia(${indexReal})" class="text-red-500 hover:text-red-700 font-black text-[10px] uppercase">
+                            <i class="fas fa-trash-alt"></i> Excluir
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
 function popularUsinasSelect(lista) {
     const select = document.getElementById('usina');
     if(!select) return;
@@ -482,6 +517,51 @@ function exportarStatusUFVExcel() {
     link.download = `Status_UFVs_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`;
     link.click();
 }
-</script>
+// Abre o modal preenchendo o que já existe
+function abrirEdicao(index) {
+    idAtual = index;
+    const o = listaOcorrencias[index];
+
+    // Preenche a data atual como padrão para a regularização se estiver vazio
+    const agora = new Date().toLocaleString('sv-SE').slice(0, 16); // Formato YYYY-MM-DDTHH:mm
+    document.getElementById('editDataReg').value = o[8] ? o[8] : agora; 
+    
+    document.getElementById('editStatus').value = o[7] || "Resolvido";
+    document.getElementById('editObs').value = o[5] || ""; // Solução
+    document.getElementById('editImg').value = o[9] || ""; // Supondo coluna 10 para imagem
+
+    document.getElementById('editModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('editModal').classList.add('hidden');
+}
+
+// Salva os dados
+document.getElementById('saveEditBtn').onclick = async function() {
+    this.innerText = "ENVIANDO...";
+    this.disabled = true;
+
+    const payload = {
+        action: "editOcorrencia",
+        index: idAtual,
+        dataReg: document.getElementById('editDataReg').value,
+        status: document.getElementById('editStatus').value,
+        solucao: document.getElementById('editObs').value,
+        imagem: document.getElementById('editImg').value
+    };
+
+    try {
+        await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+        alert("Evento Regularizado!");
+        closeModal();
+        setTimeout(carregarDadosDaPlanilha, 1000);
+    } catch (e) {
+        alert("Erro ao salvar");
+    } finally {
+        this.innerText = "Salvar Regularização";
+        this.disabled = false;
+    }
+};</script>
 </body>
 </html>
