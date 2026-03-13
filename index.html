@@ -218,348 +218,159 @@
 
     <script>
 
-const SCRIPT_URL = "COLE_AQUI_O_URL_QUE_VOCE_COPIOU";
+// 1. COLOQUE AQUI O URL QUE VOCÊ COPIOU DO GOOGLE (IMPLEMENTAÇÃO)
+const SCRIPT_URL = "AKfycbyzG_4PWbR2U-pR4gJqr8VZu6SZk6XdNk9lp9vDR2b-F83fJ358w4wCezDAJKiugjma";
 
-// Função para enviar ocorrência
+const CREDENCIAIS = { u: "admin", p: "usina2026", n: "Gestor CFTV" };
+let idAtual = null;
+
+// --- INICIALIZAÇÃO ---
+
+// Quando a página carrega, verifica se já está logado
+window.onload = () => {
+    if(localStorage.getItem('solar_session')) {
+        mostrarApp();
+        carregarDadosDaPlanilha();
+    }
+};
+
+async function carregarDadosDaPlanilha() {
+    try {
+        const response = await fetch(SCRIPT_URL);
+        const dados = await response.json();
+        // dados[0] são os cabeçalhos, o resto são as usinas
+        const usinas = dados.slice(1);
+        
+        renderizarUFVs(usinas);
+        popularUsinasSelect(usinas);
+    } catch (e) {
+        console.error("Erro ao ler planilha:", e);
+    }
+}
+
+// --- FUNÇÕES DE INTERFACE (IGUAIS ÀS SUAS) ---
+
+function mostrarApp() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('displayUser').innerText = localStorage.getItem('solar_session');
+}
+
+function autenticar() {
+    const u = document.getElementById('userInput').value;
+    const p = document.getElementById('passInput').value;
+    if(u === CREDENCIAIS.u && p === CREDENCIAIS.p) {
+        localStorage.setItem('solar_session', CREDENCIAIS.n);
+        mostrarApp();
+        carregarDadosDaPlanilha();
+    } else { alert("Acesso Negado."); }
+}
+
+function logout() {
+    localStorage.removeItem('solar_session');
+    location.reload(); // Recarrega para limpar tudo
+}
+
+function switchTab(tab) {
+    document.getElementById('contentOcorrencias').classList.toggle('hidden', tab !== 'ocorrencias');
+    document.getElementById('contentStatus').classList.toggle('hidden', tab !== 'status');
+    document.getElementById('tabBtnOcorrencias').classList.toggle('tab-active', tab === 'ocorrencias');
+    document.getElementById('tabBtnStatus').classList.toggle('tab-active', tab === 'status');
+}
+
+// --- RENDERIZAÇÃO DA TABELA DE STATUS (USINAS) ---
+
+function renderizarUFVs(lista) {
+    const tbody = document.getElementById('tabelaUFVs');
+    if (!tbody) return;
+    
+    // Ordenar alfabeticamente
+    lista.sort((a, b) => a[0].localeCompare(b[0]));
+
+    tbody.innerHTML = lista.map(u => `
+        <tr class="hover:bg-slate-50 transition border-b">
+            <td class="px-4 py-3 font-black text-emerald-700 uppercase">${u[0]}</td>
+            <td class="px-4 py-3 text-center">
+                <select onchange="atualizarCampo('${u[0]}', 'digifort', this.value)" class="bg-transparent border-none font-bold text-center ${u[4]!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
+                    <option value="OK" ${u[4]==='OK'?'selected':''}>OK</option>
+                    <option value="OFFLINE" ${u[4]!=='OK'?'selected':''}>OFFLINE</option>
+                </select>
+            </td>
+            <td class="px-4 py-3 text-center">
+                <input type="text" value="${u[5] || 'OK'}" onblur="atualizarCampo('${u[0]}', 'anydesk', this.value)" class="w-20 text-center bg-transparent outline-none font-bold text-emerald-600">
+            </td>
+            <td class="px-4 py-3 text-center"><input type="number" value="${u[4] || 8}" onblur="atualizarCampo('${u[0]}', 'totalCam', this.value)" class="w-12 text-center bg-transparent outline-none"></td>
+            <td class="px-4 py-3 text-center"><input type="number" value="${u[3] || 8}" onblur="atualizarCampo('${u[0]}', 'onCam', this.value)" class="w-12 text-center bg-transparent font-bold ${u[3] < u[4] ? 'text-red-500':'text-emerald-600'} outline-none"></td>
+            <td class="px-4 py-3">
+                <select onchange="atualizarCampo('${u[0]}', 'fibra', this.value)" class="bg-transparent border-none ${u[2]!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
+                    <option value="OK" ${u[2]==='OK'?'selected':''}>OK</option>
+                    <option value="ROMPIDA" ${u[2]==='ROMPIDA'?'selected':''}>ROMPIDA</option>
+                </select>
+            </td>
+            <td class="px-4 py-3 text-center">
+                <select onchange="atualizarCampo('${u[0]}', 'pronta_resposta', this.value)" class="bg-transparent border-none ${u[1] === 'ATIVO' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
+                    <option value="ATIVO" ${u[1] === 'ATIVO' ? 'selected' : ''}>ATIVO</option>
+                    <option value="INATIVO" ${u[1] === 'INATIVO' ? 'selected' : ''}>INATIVO</option>
+                </select>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function popularUsinasSelect(lista) {
+    const options = '<option value="" disabled selected>Escolha a usina</option>' + 
+                    lista.map(u => `<option value="${u[0]}">${u[0]}</option>`).join('');
+    document.getElementById('usina').innerHTML = options;
+}
+
+// --- ENVIO DE DADOS PARA A PLANILHA ---
+
+async function atualizarCampo(usina, campo, valor) {
+    // Envia a mudança para o Google Sheets em segundo plano
+    fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ action: "updateStatus", usina, campo, valor })
+    });
+}
+
 document.getElementById('formRegistro').onsubmit = async function(e) {
     e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.innerText = "A guardar...";
+    btn.disabled = true;
+
     const dados = {
         action: "addOcorrencia",
         operador: document.getElementById('operador').value,
+        impacto: document.getElementById('impacto').value,
         usina: document.getElementById('usina').value,
         tipo: document.getElementById('tipo').value,
         local: document.getElementById('local').value,
         desc: document.getElementById('desc').value
     };
 
-    await fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(dados)
-    });
-    
-    alert("Registado na Planilha!");
-    this.reset();
+    try {
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify(dados)
+        });
+        alert("Evento registado na Planilha Google!");
+        this.reset();
+    } catch (err) {
+        alert("Erro ao salvar. Verifique a conexão.");
+    } finally {
+        btn.innerText = "Registar Ocorrência";
+        btn.disabled = false;
+    }
 };
 
-// Função para ler as usinas da planilha ao abrir o site
-async function carregarUsinasDaPlanilha() {
-    const response = await fetch(SCRIPT_URL);
-    const dados = await response.json();
-    // Aqui você usa os dados para montar a sua tabela e o seu select
-    console.log("Dados da Planilha:", dados);
-}
-        const CREDENCIAIS = { u: "admin", p: "usina2026", n: "Gestor CFTV" };
-        let db;
-        let idAtual = null;
-
-        const NOMES_USINAS = [
-            "Água Clara", "Almino Afonso", "Aloândia 1", "Aparecida do Taboado", "Araruama 1", 
-            "Araruama 2", "Araruama 3", "Bonópolis", "Borda da Mata", "Botelhos 2", 
-            "Brejinho", "Buriti Alegre", "Cachoeira Alta 1", "Cambuí", "Campo Grande", 
-            "Corumbaíba 2", "Corumbaíba 3", "Frei Inocêncio", "Grossos 1", "Guará", 
-            "Iaciara 1", "Iaciara 2", "Itaguaí 4", "Itaguara", "Itarumã 1", 
-            "Itarumã 2", "Lambari", "Major Sales", "Mateus Leme 1", "Mateus Leme 2", 
-            "Monte Sião", "Mossoró 2", "Nova Andradina", "Nova Aurora 2", "Nova Lacerda", 
-            "Panamá de Goiás 1", "Panamá de Goiás 2", "Paranaiguara", "Paranatinga", "Paratinga", 
-            "Paty de Alferes", "Pedra Santa", "Pongaí", "Resende", "Rio do Antônio 1", 
-            "Rio do Antônio 2", "Rio Pardo de Minas", "Rota do Sol 1", "Santo Antônio do Descoberto", 
-            "São Francisco de Itabapoana", "São Gabriel do Oeste 1", "São Joaquim da Barra 1", 
-            "São Joaquim da Barra 2", "Serra do Mel", "Serra do Mel 2", "Vassouras", "Naque"
-        ];
-
-        const request = indexedDB.open("MonitoramentoCFTV_V1", 1);
-        request.onupgradeneeded = (e) => {
-            db = e.target.result;
-            db.createObjectStore("ocorrencias", { keyPath: "id", autoIncrement: true });
-            db.createObjectStore("ufv_status", { keyPath: "id" });
-        };
-        request.onsuccess = (e) => {
-            db = e.target.result;
-            verificarEPopularUFVs();
-            renderizarTabela();
-            if(localStorage.getItem('solar_session')) mostrarApp();
-        };
-
-        function verificarEPopularUFVs() {
-            const trans = db.transaction("ufv_status", "readwrite");
-            const store = trans.objectStore("ufv_status");
-            store.count().onsuccess = (e) => {
-                if (e.target.result === 0) {
-                    NOMES_USINAS.forEach(nome => {
-                        store.add({ 
-                            id: nome.toLowerCase().replace(/\s/g, '_'), 
-                            ufv: nome, digifort: "OK", anydesk: "OK", totalCam: 8, onCam: 8, fibra: "OK",
-                            seguranca: "SEM NECESSIDADE", pronta_resposta: "ATIVO"
-                        });
-                    });
-                }
-                setTimeout(() => { renderizarUFVs(); popularUsinasSelect(); }, 100);
-            };
-        }
-
-        function autenticar() {
-            const u = document.getElementById('userInput').value;
-            const p = document.getElementById('passInput').value;
-            if(u === CREDENCIAIS.u && p === CREDENCIAIS.p) {
-                localStorage.setItem('solar_session', CREDENCIAIS.n);
-                mostrarApp();
-            } else { alert("Acesso Negado."); }
-        }
-
-        function mostrarApp() {
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('mainApp').classList.remove('hidden');
-            document.getElementById('displayUser').innerText = localStorage.getItem('solar_session');
-        }
-
-        function logout() {
-            localStorage.removeItem('solar_session');
-            document.getElementById('mainApp').classList.add('hidden');
-            document.getElementById('loginPage').style.display = 'flex';
-        }
-
-        function switchTab(tab) {
-            document.getElementById('contentOcorrencias').classList.toggle('hidden', tab !== 'ocorrencias');
-            document.getElementById('contentStatus').classList.toggle('hidden', tab !== 'status');
-            document.getElementById('tabBtnOcorrencias').classList.toggle('tab-active', tab === 'ocorrencias');
-            document.getElementById('tabBtnStatus').classList.toggle('tab-active', tab === 'status');
-        }
-
-        function renderizarTabela() {
-            if(!db) return;
-            const q = document.getElementById('search').value.toLowerCase();
-            db.transaction("ocorrencias").objectStore("ocorrencias").getAll().onsuccess = (e) => {
-                const lista = e.target.result.filter(o => 
-                    o.usina.toLowerCase().includes(q) || 
-                    o.status.toLowerCase().includes(q) || 
-                    o.operador.toLowerCase().includes(q) || 
-                    (o.data && o.data.includes(q))
-                );
-                document.getElementById('tabelaDados').innerHTML = lista.reverse().map(o => `
-                    <tr class="hover:bg-slate-50 transition border-b">
-                        <td class="px-6 py-4">
-                            <span class="px-2 py-1 rounded text-[9px] font-black uppercase ${o.status === 'Aberto' ? 'bg-red-100 text-red-600' : o.status === 'Investigando' ? 'bg-blue-100 text-blue-600' : 'bg-emerald-100 text-emerald-600'}">${o.status}</span>
-                            <div class="mt-1 text-[8px] font-bold text-slate-400 uppercase">Impacto: ${o.impacto}</div>
-                        </td>
-                        <td class="px-6 py-4 text-[10px]">
-                            <div class="text-emerald-600 font-bold uppercase">${o.usina}</div>
-                            <div class="font-black text-slate-700 uppercase">${o.operador}</div>
-                            <div class="text-slate-400 font-mono">${new Date(o.data).toLocaleString('pt-BR')}</div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="font-bold text-slate-800">${o.tipo}</div>
-                            <div class="text-[10px] text-slate-500 uppercase">${o.local}</div>
-                            ${o.obs ? `<div class="text-[9px] mt-2 text-emerald-700 bg-emerald-50 p-2 border-l-4 border-emerald-500 rounded"><b>SOLUÇÃO:</b> ${o.obs}${o.dataReg ? `<br><b class='text-emerald-900'>FINALIZADO EM: ${o.dataReg.split('-').reverse().join('/')}</b>` : ''}</div>` : ''}
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex gap-3 justify-center no-print">
-                                <button onclick="openModal(${o.id})" class="text-slate-300 hover:text-emerald-600 transition"><i class="fas fa-edit"></i></button>
-                                <button onclick="excluir(${o.id})" class="text-slate-200 hover:text-red-500 transition"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                `).join('');
-            };
-        }
-
-        function renderizarUFVs() {
-            db.transaction("ufv_status").objectStore("ufv_status").getAll().onsuccess = (e) => {
-                const lista = e.target.result.sort((a,b) => a.ufv.localeCompare(b.ufv));
-                document.getElementById('tabelaUFVs').innerHTML = lista.map(u => `
-                    <tr>
-                        <td class="px-4 py-3 font-black text-emerald-700 uppercase">${u.ufv}</td>
-                        <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'digifort', this.value)" class="bg-transparent border-none font-bold text-center ${u.digifort!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
-                                <option value="OK" ${u.digifort==='OK'?'selected':''}>OK</option>
-                                <option value="OFFLINE" ${u.digifort!=='OK'?'selected':''}>OFFLINE</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'anydesk', this.value)" class="bg-transparent border-none font-bold text-center ${u.anydesk!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
-                                <option value="OK" ${u.anydesk==='OK'?'selected':''}>OK</option>
-                                <option value="OFFLINE" ${u.anydesk!=='OK'?'selected':''}>OFFLINE</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-3 text-center"><input type="number" value="${u.totalCam}" onblur="updateUFV('${u.id}', 'totalCam', this.value)" class="w-12 text-center bg-transparent outline-none"></td>
-                        <td class="px-4 py-3 text-center"><input type="number" value="${u.onCam}" onblur="updateUFV('${u.id}', 'onCam', this.value)" class="w-12 text-center bg-transparent font-bold ${u.onCam < u.totalCam ? 'text-red-500':'text-emerald-600'} outline-none"></td>
-                        <td class="px-4 py-3">
-                            <select onchange="updateUFV('${u.id}', 'fibra', this.value)" class="bg-transparent border-none ${u.fibra!=='OK'?'text-red-500':'text-emerald-600'} outline-none cursor-pointer">
-                                <option value="OK" ${u.fibra==='OK'?'selected':''}>OK</option>
-                                <option value="ROMPIDA" ${u.fibra==='ROMPIDA'?'selected':''}>ROMPIDA</option>
-                                <option value="N/A" ${u.fibra==='N/A'?'selected':''}>NÃO TEM</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'seguranca', this.value)" class="bg-transparent border-none ${u.seguranca === 'SEM NECESSIDADE' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
-                                <option value="MOBILIZADA" ${u.seguranca === 'MOBILIZADA' ? 'selected' : ''}>MOBILIZADA</option>
-                                <option value="SEM NECESSIDADE" ${u.seguranca === 'SEM NECESSIDADE' ? 'selected' : ''}>SEM NECESSIDADE</option>
-                            </select>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <select onchange="updateUFV('${u.id}', 'pronta_resposta', this.value)" class="bg-transparent border-none ${u.pronta_resposta === 'ATIVO' ? 'text-emerald-600' : 'text-red-500'} outline-none cursor-pointer">
-                                <option value="ATIVO" ${u.pronta_resposta === 'ATIVO' ? 'selected' : ''}>ATIVO</option>
-                                <option value="INATIVO" ${u.pronta_resposta === 'INATIVO' ? 'selected' : ''}>INATIVO</option>
-                            </select>
-                        </td>
-                    </tr>
-                `).join('');
-            };
-        }
-
-        function updateUFV(id, campo, valor) {
-            const trans = db.transaction("ufv_status", "readwrite");
-            const store = trans.objectStore("ufv_status");
-            store.get(id).onsuccess = (e) => {
-                const d = e.target.result;
-                d[campo] = isNaN(valor) ? valor : parseInt(valor);
-                store.put(d);
-                trans.oncomplete = () => { renderizarUFVs(); popularUsinasSelect(); };
-            };
-        }
-
-        function popularUsinasSelect() {
-            db.transaction("ufv_status").objectStore("ufv_status").getAll().onsuccess = (e) => {
-                const lista = e.target.result.sort((a,b) => a.ufv.localeCompare(b.ufv));
-                const options = '<option value="" disabled selected>Escolha a usina</option>' + lista.map(u => `<option>${u.ufv}</option>`).join('');
-                document.getElementById('usina').innerHTML = options;
-                document.getElementById('editUsina').innerHTML = options;
-            };
-        }
-
-        // FUNÇÃO ONSUBMIT ATUALIZADA COM DATA MANUAL
-        document.getElementById('formRegistro').onsubmit = (e) => {
-            e.preventDefault();
-            
-            const dataManual = document.getElementById('dataEventoManual').value;
-            const dataFinal = dataManual ? new Date(dataManual).toISOString() : new Date().toISOString();
-            
-            const f = document.getElementById('foto').files[0];
-            const s = (img = null) => {
-                const trans = db.transaction("ocorrencias", "readwrite");
-                trans.objectStore("ocorrencias").add({
-                    operador: document.getElementById('operador').value,
-                    impacto: document.getElementById('impacto').value,
-                    usina: document.getElementById('usina').value,
-                    tipo: document.getElementById('tipo').value,
-                    local: document.getElementById('local').value,
-                    desc: document.getElementById('desc').value,
-                    foto: img, 
-                    status: "Aberto", 
-                    obs: "", 
-                    dataReg: "", 
-                    data: dataFinal // Usa a data manual ou atual
-                });
-                trans.oncomplete = () => { 
-                    document.getElementById('formRegistro').reset(); 
-                    renderizarTabela(); 
-                };
-            };
-            if(f) { 
-                const r = new FileReader(); 
-                r.onload = () => s(r.result); 
-                r.readAsDataURL(f); 
-            } else s();
-        };
-
-        function openModal(id) {
-            idAtual = id;
-            db.transaction("ocorrencias").objectStore("ocorrencias").get(id).onsuccess = (e) => {
-                const o = e.target.result;
-                document.getElementById('editStatus').value = o.status;
-                document.getElementById('editImpacto').value = o.impacto;
-                document.getElementById('editUsina').value = o.usina;
-                document.getElementById('editObs').value = o.obs || "";
-                document.getElementById('editDataReg').value = o.dataReg || "";
-                const c = document.getElementById('editFotoContainer');
-                if(o.foto) { document.getElementById('editFotoView').src = o.foto; c.classList.remove('hidden'); } else c.classList.add('hidden');
-                document.getElementById('editModal').classList.remove('hidden');
-            };
-        }
-
-        function closeModal() { document.getElementById('editModal').classList.add('hidden'); }
-
-        document.getElementById('saveEditBtn').onclick = () => {
-            const store = db.transaction("ocorrencias", "readwrite").objectStore("ocorrencias");
-            store.get(idAtual).onsuccess = (e) => {
-                const d = e.target.result;
-                d.status = document.getElementById('editStatus').value;
-                d.impacto = document.getElementById('editImpacto').value;
-                d.usina = document.getElementById('editUsina').value;
-                d.obs = document.getElementById('editObs').value;
-                d.dataReg = document.getElementById('editDataReg').value;
-                store.put(d); closeModal(); renderizarTabela();
-            };
-        };
-
-        function excluir(id) { if(confirm("Deseja excluir?")) { db.transaction("ocorrencias", "readwrite").objectStore("ocorrencias").delete(id).onsuccess = renderizarTabela; } }
-
-        function exportarExcel() {
-            const transaction = db.transaction("ocorrencias", "readonly");
-            const store = transaction.objectStore("ocorrencias");
-            const request = store.getAll();
-
-            request.onsuccess = () => {
-                const dados = request.result;
-                if (dados.length === 0) { alert("Não há dados para exportar."); return; }
-
-                let csv = "Data Início;Operador;Usina;Tipo;Status;Impacto;Solução;Data Final\n";
-                dados.forEach(o => {
-                    const linha = [
-                        new Date(o.data).toLocaleString('pt-BR'),
-                        o.operador || "",
-                        o.usina || "",
-                        o.tipo || "",
-                        o.status || "",
-                        o.impacto || "",
-                        (o.obs || "").replace(/(\n|;)/gm, " "),
-                        o.dataReg || ""
-                    ];
-                    csv += linha.join(";") + "\n";
-                });
-
-                const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.setAttribute("href", url);
-                link.setAttribute("download", `Relatorio_Ocorrencias_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
-                link.click();
-            };
-        }
-
-        function exportarStatusUFVExcel() {
-            const transaction = db.transaction("ufv_status", "readonly");
-            const store = transaction.objectStore("ufv_status");
-            const request = store.getAll();
-
-            request.onsuccess = () => {
-                const dados = request.result;
-                if (dados.length === 0) { alert("Não há dados de status."); return; }
-
-                let csv = "UFV;Segurança Patrimonial;Pronta Resposta;Fibra;Digifort;Anydesk;Total Cam;Cam ON\n";
-                dados.sort((a, b) => a.ufv.localeCompare(b.ufv));
-                dados.forEach(u => {
-                    const linha = [
-                        u.ufv || "N/A",
-                        u.seguranca || "SEM NECESSIDADE",
-                        u.pronta_resposta || "ATIVO",
-                        u.fibra || "OK",
-                        u.digifort || "OK",
-                        u.anydesk || "OK",
-                        u.totalCam || 0,
-                        u.onCam || 0
-                    ];
-                    csv += linha.join(";") + "\n";
-                });
-
-                const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.setAttribute("href", url);
-                link.setAttribute("download", `Status_UFVs_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
-                link.click();
-            };
-        }
-    </script>
+// Funções de busca e exportação (simplificadas para funcionar com a Planilha aberta)
+function exportarExcel() {
+    window.open(SCRIPT_URL, '_blank');
+    alert("Dica: Você pode baixar o relatório diretamente da Planilha Google em Arquivo -> Fazer Download.");
+}    
+</script>
 </body>
 </html>
-
