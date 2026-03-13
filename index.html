@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Socket.io client (servido pelo próprio servidor) -->
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         @media print { .no-print { display: none; } }
         ::-webkit-scrollbar { width: 6px; }
@@ -243,9 +243,15 @@
 
     // ── Inicializar Socket.io ────────────────────────────────────────────
     function iniciarSocket() {
-        socket = io();
+        console.log('Iniciando Socket.io...');
+        // Tenta conectar ao servidor atual
+        socket = io({
+            transports: ['websocket', 'polling'],
+            reconnectionAttempts: 5
+        });
 
         socket.on('connect', () => {
+            console.log('Socket conectado!');
             setStatus('online', 'Conectado');
             socket.emit('carregar_dados');
         });
@@ -340,6 +346,7 @@
         const p = document.getElementById('passInput').value;
         if (!u || !p) { toast('Preencha usuário e senha.', 'error'); return; }
         document.getElementById('loginStatus').textContent = 'Autenticando...';
+        console.log('Enviando evento de autenticação para:', u);
         socket.emit('autenticar', { usuario: u, senha: p });
     }
 
