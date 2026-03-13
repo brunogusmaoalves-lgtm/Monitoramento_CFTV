@@ -365,13 +365,80 @@ document.getElementById('formRegistro').onsubmit = async function(e) {
         btn.disabled = false;
     }
 };
+function doGet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  // Pegar dados das Usinas
+  var sheetUfv = ss.getSheetByName("ufv_status");
+  var ufvs = sheetUfv.getDataRange().getValues();
+  
+  // Pegar dados das Ocorrências
+  var sheetOcor = ss.getSheetByName("ocorrencias");
+  var ocorrencias = [];
+  if (sheetOcor) {
+    ocorrencias = sheetOcor.getDataRange().getValues();
+  }
+  
+  // Envia os dois para o site
+  var resultado = {
+    ufvs: ufvs,
+    ocorrencias: ocorrencias
+  };
+  
+  return ContentService.createTextOutput(JSON.stringify(resultado))
+    .setMimeType(ContentService.MimeType.JSON);
+}
 
 // Funções de busca e exportação (simplificadas para funcionar com a Planilha aberta)
 function exportarExcel() {
     window.open(SCRIPT_URL, '_blank');
     alert("Dica: Você pode baixar o relatório diretamente da Planilha Google em Arquivo -> Fazer Download.");
 }    
+// --- ESTA É A PARTE QUE ATUALIZA O HISTÓRICO APÓS SALVAR ---
+document.getElementById('formRegistro').onsubmit = async function(e) {
+    e.preventDefault();
+    
+    const btn = e.target.querySelector('button[type="submit"]');
+    const textoOriginal = btn.innerText;
+    btn.innerText = "A guardar...";
+    btn.disabled = true;
+
+    const payload = {
+        action: "addOcorrencia",
+        operador: document.getElementById('operador').value,
+        usina: document.getElementById('usina').value,
+        tipo: document.getElementById('tipo').value,
+        local: document.getElementById('local').value,
+        desc: document.getElementById('desc').value,
+        impacto: document.getElementById('impacto').value
+    };
+
+    try {
+        // 1. Envia para a planilha
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            cache: 'no-cache',
+            body: JSON.stringify(payload)
+        });
+
+        alert("Evento registado com sucesso!");
+        this.reset(); // Limpa o formulário
+
+        // 2. O PULO DO GATO: Chama a função de carregar para a tela atualizar
+        // Certifique-se que o nome da função abaixo é o mesmo que você usou para ler a planilha
+        carregarDadosDoSistema(); 
+
+    } catch (err) {
+        console.error("Erro:", err);
+        alert("Erro ao comunicar com a planilha.");
+    } finally {
+        btn.innerText = textoOriginal;
+        btn.disabled = false;
+    }
+};
 </script>
 </body>
 </html>
+
 
